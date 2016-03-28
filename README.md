@@ -12,11 +12,9 @@ Here is a 100-record sample from the [NYPD Motor Vehicle Collisions Dataset](htt
 
 ![alt text][one_hundred]
 
-Here is the output for a 1000-record sample:
-
 At a glance, date, time, the distribution of injuries, and the contribution factor of the first vehicle appear to be
 completely populated, while geographic information seems mostly complete, but spottier. The completion sparkgraph at
-right demonstrates a strong clustering about 23 filled values.
+right demonstrates a strong clustering about 20 filled values.
 
 Here's what happens when we throw 1000 records at it:
 
