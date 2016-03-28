@@ -1,6 +1,6 @@
-# import numpy as np
-# from matplotlib import gridspec
-# import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import gridspec
+import matplotlib.pyplot as plt
 
 
 def missingno(df, figsize=(20, 10), width_ratios=(15, 1), color=(0.25, 0.25, 0.25), fontsize=16):
