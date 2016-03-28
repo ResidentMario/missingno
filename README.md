@@ -1,0 +1,47 @@
+# missingno
+
+Messy datasets? Missing values? `missingno` provides a flexible and easy-to-use missing data matrix (nullity matrix?)
+visualization that allows you to get a quick visual summary of the completeness (or lack thereof) of your dataset.
+It's built using `matplotlib`, so it's fast, and takes any `DataFrame` input that you throw at it, so it's flexible.
+Just `pip install missingno` to get started.
+
+Here is a 100-record sample from the [NYPD Motor Vehicle Collisions Dataset](https://data.cityofnewyork.us/Public-Safety/NYPD-Motor-Vehicle-Collisions/h9gi-nx95):
+
+    >>> from missingno import missingno
+    >>> missingno(df.sample(100))
+
+![alt text][one_hundred]
+
+Here is the output for a 1000-record sample:
+
+At a glance, date, time, the distribution of injuries, and the contribution factor of the first vehicle appear to be
+completely populated, while geographic information seems mostly complete, but spottier. The completion sparkgraph at
+right demonstrates a strong clustering about 23 filled values.
+
+Here's what happens when we throw 1000 records at it:
+
+    >>> missingno(df.sample(1000))
+
+![alt text][one_thousand]
+
+[one_hundred]: http://www.residentmar.io/static/post_assets/missingno/missingno_one_hundred.png
+[one_thousand]: http://www.residentmar.io/static/post_assets/missingno/missingno_one_thousand.png
+
+`missingno` provides the following optional arguments (defaults indicated), all of which are passed to `matplotlib`
+under the hood:
+
+* `figsize=(20, 10)` --- Adjusts the aspect ratio and size of the graph.
+* `width_ratios=(15, 1)` --- Adjusts the relative sizes of the main plot and the sparkgraph. color=(0.25, 0.25, 0.25),
+fontsize=16)
+* `color=(0.25, 0.25, 0.25)` --- Adjusts the color of the filled matrix entries and of the sparkline. Note that
+`matplotlib` (atypically) represents RGB values in terms of a fraction out of one! So e.g. `0 = 0` and `1 = 255`; to
+input your typical RGB value (`122` for instance) pass `122/255` instead.
+* `fontsize=16` --- Adjusts the font-sizes used for display. Essential for datasets with lots of columns or for small
+displays.
+
+[For more on this module's ideation check out this post on my personal blog](http://www.residentmar.io/2016/03/28/missingno.html).
+
+[If you like this project be sure to also check out the pandas-profiling module](https://github.com/JosPolfliet/pandas-profiling).
+
+Bugs? Thoughts? Feature requests? [Throw them at the bug tracker and I'll take a look](https://github.com/ResidentMario/missingno/issues).
+As always I'm very interested in hearing feedback: you can also reach out to me at `aleksey@residentmar.io`.
