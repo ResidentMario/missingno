@@ -36,6 +36,8 @@ fontsize=16)
 input your typical RGB value (`122` for instance) pass `122/255` instead.
 * `fontsize=16` --- Adjusts the font-sizes used for display. Essential for datasets with lots of columns or for small
 displays.
+* `labels=True` --- Set this to `False` to turn off the y-axis labels. If you have a huge number of columns this is
+probably necessary.
 
 [For more on this module's ideation check out this post on my personal blog](http://www.residentmar.io/2016/03/28/missingno.html).
 
