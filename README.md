@@ -22,8 +22,8 @@ Here's what happens when we throw 1000 records at it:
 
 ![alt text][one_thousand]
 
-[one_hundred]: http://www.residentmar.io/static/post_assets/missingno/missingno_one_hundred.png
-[one_thousand]: http://www.residentmar.io/static/post_assets/missingno/missingno_one_thousand.png
+[one_hundred]: http://i.imgur.com/g8Rserl.png
+[one_thousand]: http://i.imgur.com/y2RfKnS.png
 
 `missingno` provides the following optional arguments (defaults indicated), all of which are passed to `matplotlib`
 under the hood:
