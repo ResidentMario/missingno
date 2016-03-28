@@ -3,6 +3,7 @@ setup(
   name = 'missingno',
   packages = ['missingno'], # this must be the same as the name above
   install_requires=['numpy', 'matplotlib'],
+  py_modules=['missingno'],
   version = '0.1.0',
   description = 'Missing data visualization module for Python.',
   author = 'Aleksey Bilogur',
