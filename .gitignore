@@ -1,1 +1,39 @@
-.ipynb_checkpoints
+# Default
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyCharm project
+.idea
+
+# Mac junk file
+.DS_Store
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Project notebook support
+/.ipynb_checkpoints
+
+# Project-specific
+*.csv
