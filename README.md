@@ -29,8 +29,7 @@ Here's what happens when we throw 1000 records at it:
 under the hood:
 
 * `figsize=(20, 10)` --- Adjusts the aspect ratio and size of the graph.
-* `width_ratios=(15, 1)` --- Adjusts the relative sizes of the main plot and the sparkgraph. color=(0.25, 0.25, 0.25),
-fontsize=16)
+* `width_ratios=(15, 1)` --- Adjusts the relative sizes of the main plot and the sparkgraph.
 * `color=(0.25, 0.25, 0.25)` --- Adjusts the color of the filled matrix entries and of the sparkline. Note that
 `matplotlib` (atypically) represents RGB values in terms of a fraction out of one! So e.g. `0 = 0` and `1 = 255`; to
 input your typical RGB value (`122` for instance) pass `122/255` instead.
