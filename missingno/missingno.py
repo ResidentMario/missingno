@@ -59,7 +59,7 @@ def missingno(df, figsize=(20, 10), width_ratios=(15, 1), color=(0.25, 0.25, 0.2
     # Calculate row-wise completeness for the sparkline.
     completeness_srs = df.notnull().astype(bool).sum(axis=1)
     x_domain = list(range(0, height))
-    y_range = list(completeness_srs.values)
+    y_range = list(reversed(completeness_srs.values))
     min_completeness = min(y_range)
     max_completeness = max(y_range)
     min_completeness_index = y_range.index(min_completeness)
