@@ -57,12 +57,9 @@ issues might otherwise be very hard to visualize or understand.
 
 # Going further
 
-<div style="background:#ddd; font-weight:bold; padding:25px;">
+**[For more on missingno functions check out my tutorial on working with missing data in Python!](http://nbviewer.jupyter.org/github/ResidentMario/python-missing-data/blob/master/missing-data.ipynb)**
 
-[For more on missingno functions check out my tutorial on working with missing data in Python!](http://nbviewer.jupyter.org/github/ResidentMario/python-missing-data/blob/master/missing-data.ipynb)
-
-[For more on this module's ideation check out this post on my personal blog](http://www.residentmar.io/2016/03/28/missingno.html).
-</div>
+**[For more on this module's ideation check out this post on my personal blog](http://www.residentmar.io/2016/03/28/missingno.html).**
 
 
 
