@@ -1,46 +1,72 @@
 # missingno
 
-Messy datasets? Missing values? `missingno` provides a flexible and easy-to-use missing data matrix (nullity matrix?)
-visualization that allows you to get a quick visual summary of the completeness (or lack thereof) of your dataset.
-It's built using `matplotlib`, so it's fast, and takes any `DataFrame` input that you throw at it, so it's flexible.
-Just `pip install missingno` to get started.
+Messy datasets? Missing values? `missingno` provides a small toolset of flexible and easy-to-use missing data
+visualizations and utilities that allows you to get a quick visual summary of the completeness (or lack thereof) of
+your dataset. It's built using `matplotlib`, so it's fast, and takes any `pandas.DataFrame` input that you throw at
+it, so it's flexible. Just `pip install missingno` to get started.
 
-Here is a 100-record sample from the [NYPD Motor Vehicle Collisions Dataset](https://data.cityofnewyork.us/Public-Safety/NYPD-Motor-Vehicle-Collisions/h9gi-nx95):
+# Quickstart
 
-    >>> from missingno import missingno
-    >>> missingno(df.sample(100))
+All examples use the [NYPD Motor Vehicle Collisions Dataset](https://data.cityofnewyork.us/Public-Safety/NYPD-Motor-Vehicle-Collisions/h9gi-nx95).
 
-![alt text][one_hundred]
+First up, the `missingno` nullity matrix is a data-dense display which lets you quickly visually pick out patterns in
+ data completion:
+
+    >>> import missingno as msno
+    >>> msno.matrix(data.sample(250))
+
+![alt text][two_hundred_fifty]
 
 At a glance, date, time, the distribution of injuries, and the contribution factor of the first vehicle appear to be
-completely populated, while geographic information seems mostly complete, but spottier. The completion sparkgraph at
-right demonstrates a strong clustering about 20 filled values.
+completely populated, while geographic information seems mostly complete, but spottier.
 
-Here's what happens when we throw 1000 records at it:
+[two_hundred_fifty]: http://i.imgur.com/DdepYwr.png
 
-    >>> missingno(df.sample(1000))
+The missingno correlation heatmap lets you measure how strongly the presence of one variable positively or negatively
+affect the presence of another:
 
-![alt text][one_thousand]
+    >>> msno.heatmap(data)
 
-[one_hundred]: http://www.residentmar.io/static/post_assets/missingno/missingno_one_hundred.png
-[one_thousand]: http://www.residentmar.io/static/post_assets/missingno/missingno_one_thousand.png
+![alt text][heatmap]
 
-`missingno` provides the following optional arguments (defaults indicated), all of which are passed to `matplotlib`
-under the hood:
+[heatmap]: http://i.imgur.com/VOS6dqf.png
 
-* `figsize=(20, 10)` --- Adjusts the aspect ratio and size of the graph.
-* `width_ratios=(15, 1)` --- Adjusts the relative sizes of the main plot and the sparkgraph.
-* `color=(0.25, 0.25, 0.25)` --- Adjusts the color of the filled matrix entries and of the sparkline. Note that
-`matplotlib` (atypically) represents RGB values in terms of a fraction out of one! So e.g. `0 = 0` and `1 = 255`; to
-input your typical RGB value (`122` for instance) pass `122/255` instead.
-* `fontsize=16` --- Adjusts the font-sizes used for display. Essential for datasets with lots of columns or for small
-displays.
-* `labels=True` --- Set this to `False` to turn off the y-axis labels. If you have a huge number of columns this is
-probably necessary.
+Hmm. It seems that reports which are filed with an `OFF STREET NAME` variable are less likely to have complete
+geographic data.
+
+Finally the dendrogram view allows you to more fully correlate variable completion, revealing trends deeper than the
+pairwise ones visible in the correlation heatmap:
+
+    >>> msno.dendrogram(dat)
+
+![alt text][dendrogram]
+
+[dendrogram]: http://i.imgur.com/6ZBC4af.png
+
+`missingno` also provides utility functions for filtering records in your dataset based on completion. These are
+useful in particular for filtering through and drilling down into particularly large datasets whose data missingness
+issues might otherwise be very hard to visualize or understand.
+
+    >>> filtered_data = msno.nullity_filter(data, filter='bottom', n=5, p=0.9) # or filter='top'
+    >>> filtered_sorted_data = msno.nullity_sort(data, sort='descending') # or sort='ascending'
+    >>> msno.matrix(filtered_data.sample(250))
+
+![alt text][matrix_sorted_filtered]
+
+[matrix_sorted_filtered]: http://i.imgur.com/qL6zNQj.png
+
+# Going further
+
+<div style="background:#ddd; font-weight:bold; padding:25px;">
+
+[For more on missingno functions check out my tutorial on working with missing data in Python!](http://nbviewer.jupyter.org/github/ResidentMario/python-missing-data/blob/master/missing-data.ipynb)
 
 [For more on this module's ideation check out this post on my personal blog](http://www.residentmar.io/2016/03/28/missingno.html).
+</div>
 
-[If you like this project be sure to also check out the pandas-profiling module](https://github.com/JosPolfliet/pandas-profiling).
+
+
+# Contributing
 
 Bugs? Thoughts? Feature requests? [Throw them at the bug tracker and I'll take a look](https://github.com/ResidentMario/missingno/issues).
 As always I'm very interested in hearing feedback: you can also reach out to me at `aleksey@residentmar.io`.
