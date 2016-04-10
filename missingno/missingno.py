@@ -272,7 +272,7 @@ def heatmap(df, inline=True,
             ):
     """
     :param df: The DataFrame whose completeness is being heatmapped.
-    :param inline: Whether or not to display the plot. If this is set to False (it is True by default), instead of 
+    :param inline: Whether or not to display the plot. If this is set to False (it is True by default), instead of
     displaying the plot missingno will return its figure.
     :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default). See
     `nullity_filter()` for more information.
@@ -298,8 +298,12 @@ def heatmap(df, inline=True,
     gs = gridspec.GridSpec(1, 1)
     ax0 = plt.subplot(gs[0])
 
+    # Pre-processing: remove completely filled variables.
+    df = df[[i for i, n in enumerate(np.var(df.isnull(), axis='rows')) if n > 0]]
+
     # Create and mask the correlation matrix.
     corr_mat = df.isnull().corr()
+    corr_mat = corr_mat.replace(np.nan, 1)
     corr_mat[np.isnan(corr_mat)] = 0
     mask = np.zeros_like(corr_mat)
     mask[np.triu_indices_from(mask)] = True

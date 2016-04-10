@@ -29,10 +29,15 @@ affect the presence of another:
 
 ![alt text][heatmap]
 
-[heatmap]: http://i.imgur.com/VOS6dqf.png
+[heatmap]: http://i.imgur.com/XVd3oLY.png
 
 Hmm. It seems that reports which are filed with an `OFF STREET NAME` variable are less likely to have complete
 geographic data.
+
+**Caution**: The heatmap will *not* work with variables which have a variance of zero (that is, they
+are always filled or always empty). This is due to the fact that for such entries, correlation is meaningless. These
+variables are silently removed from the analysis&mdash;in this case for instance the variables `TIME` and `DATE` are
+not present.
 
 Finally the dendrogram view allows you to more fully correlate variable completion, revealing trends deeper than the
 pairwise ones visible in the correlation heatmap:
