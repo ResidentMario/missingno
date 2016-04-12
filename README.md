@@ -72,6 +72,17 @@ binary distance). At each step of the tree the variables are split up based on w
 distance of the remaining clusters. The more monotone the set of variables, the closer their total distance is to
 zero, and the closer their average distance (the y-axis) is to zero.
 
+To interpret this graph, read it from a top-down perspective. Cluster leaves which linked together at a distance of
+zero fully predict one another's presence&mdash;one variable might always be empty when another is filled, or they
+might always both be filled or both empty, and so on. In this specific example the dendrogram glues together the
+variables which are required and therefore present in every record.
+
+Cluster leaves which split close to zero, but not at it, predict one another very well, but still imperfectly. If
+your own interpretation of the dataset is that these columns actually *are* or *ought to be* match each other in
+nullity (for example, as `CONTRIBUTING FACTOR VEHICLE 2` and `VEHICLE TYPE CODE 2` ought to), then the height of the
+cluster leaf tells you, in absolute terms, how often the records are "mismatched" or incorrectly filed&mdash;that is,
+ how many values you would have to fill in or drop, if you are so inclined.
+
 ## Sorting and filtering
 
 `missingno` also provides utility functions for filtering records in your dataset based on completion. These are
