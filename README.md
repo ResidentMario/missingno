@@ -9,6 +9,8 @@ it, so it's flexible. Just `pip install missingno` to get started.
 
 All examples use the [NYPD Motor Vehicle Collisions Dataset](https://data.cityofnewyork.us/Public-Safety/NYPD-Motor-Vehicle-Collisions/h9gi-nx95).
 
+I take **nullity** to mean whether a particular variable is filled in or not.
+
 ## Matrix
 
 First up, the `missingno` nullity matrix is a data-dense display which lets you quickly visually pick out patterns in
@@ -41,6 +43,9 @@ affect the presence of another:
 Hmm. It seems that reports which are filed with an `OFF STREET NAME` variable are less likely to have complete
 geographic data.
 
+Nullity correlation ranges from -1 (if one variable appears the other definitely does not) to 0 (variables appearing
+or not appearing have no effect on one another) to 1 (if one variable appears the other definitely also does).
+
 **Caution**: The heatmap will *not* work with variables which have a variance of zero (that is, they
 are always filled or always empty). This is due to the fact that for such entries, correlation is meaningless. These
 variables are silently removed from the analysis&mdash;in this case for instance the datetime and injury
@@ -61,10 +66,16 @@ ones visible in the correlation heatmap:
 
 [dendrogram]: http://i.imgur.com/6ZBC4af.png
 
+The dendrogram uses a [hierarchical clustering algorithm](http://docs.scipy.org/doc/scipy/reference/cluster.hierarchy.html)
+(courtesy of `scipy`) to bin variables against one another by their nullity correlation (measured in terms of
+binary distance). At each step of the tree the variables are split up based on which combination minimizes the
+distance of the remaining clusters. The more monotone the set of variables, the closer their total distance is to
+zero, and the closer their average distance (the y-axis) is to zero.
+
 ## Sorting and filtering
 
 `missingno` also provides utility functions for filtering records in your dataset based on completion. These are
-useful in particular for filtering through and drilling down into particularly large datasets whose data missingness
+useful in particular for filtering through and drilling down into particularly large datasets whose data nullity
 issues might otherwise be very hard to visualize or understand.
 
 Let's first apply a `nullity_filter()` to the data. The `filter` parameter controls which result set we
