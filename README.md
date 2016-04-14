@@ -60,7 +60,7 @@ is limited when it comes to larger relationships.
 The dendrogram allows you to more fully correlate variable completion, revealing trends deeper than the pairwise
 ones visible in the correlation heatmap:
 
-    >>> msno.dendrogram(dat)
+    >>> msno.dendrogram(data)
 
 ![alt text][dendrogram]
 
