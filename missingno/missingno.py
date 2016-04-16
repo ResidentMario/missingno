@@ -298,13 +298,13 @@ def heatmap(df, inline=True,
     gs = gridspec.GridSpec(1, 1)
     ax0 = plt.subplot(gs[0])
 
-    # Pre-processing: remove completely filled variables.
+    # Pre-processing: remove completely filled or completely empty variables.
     df = df[[i for i, n in enumerate(np.var(df.isnull(), axis='rows')) if n > 0]]
 
     # Create and mask the correlation matrix.
     corr_mat = df.isnull().corr()
-    corr_mat = corr_mat.replace(np.nan, 1)
-    corr_mat[np.isnan(corr_mat)] = 0
+    # corr_mat = corr_mat.replace(np.nan, 1)
+    # corr_mat[np.isnan(corr_mat)] = 0
     mask = np.zeros_like(corr_mat)
     mask[np.triu_indices_from(mask)] = True
 

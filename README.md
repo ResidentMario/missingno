@@ -13,8 +13,8 @@ I take **nullity** to mean whether a particular variable is filled in or not.
 
 ## Matrix
 
-First up, the `missingno` nullity matrix is a data-dense display which lets you quickly visually pick out patterns in
- data completion:
+The `msno.matrix` nullity matrix is a data-dense display which lets you quickly visually pick out patterns in
+ data completion.
 
     >>> import missingno as msno
     >>> msno.matrix(data.sample(250))
@@ -38,18 +38,22 @@ affect the presence of another:
 
 ![alt text][heatmap]
 
-[heatmap]: http://i.imgur.com/QeeW9Hz.png
+[heatmap]: http://i.imgur.com/ESsZRlY.png
 
 Hmm. It seems that reports which are filed with an `OFF STREET NAME` variable are less likely to have complete
 geographic data.
 
-Nullity correlation ranges from -1 (if one variable appears the other definitely does not) to 0 (variables appearing
-or not appearing have no effect on one another) to 1 (if one variable appears the other definitely also does).
+Nullity correlation ranges from `-1` (if one variable appears the other definitely does not) to `0` (variables appearing
+or not appearing have no effect on one another) to `1` (if one variable appears the other definitely also does).
+Entries marked `<1` or `>-1` are have a correlation that is close to being exactingly negative or positive, but is
+still not quite perfectly so. This points to a small number of records in the dataset which are erroneous. For
+example, in this dataset the correlation between `VEHICLE CODE TYPE 3` and `CONTRIBUTING FACTOR VEHICLE 3` is `<1`,
+indicating that, contrary to our expectation, there are a few records which have one or the other, but not both.
+These cases will require special attention.
 
-**Caution**: The heatmap will *not* work with variables which have a variance of zero (that is, they
-are always filled or always empty). This is due to the fact that for such entries, correlation is meaningless. These
-variables are silently removed from the analysis&mdash;in this case for instance the datetime and injury
-number columns, which are completely filled, are not included.
+Note that variables with a variance of zero (that is, variables which are always full or always empty) have no
+meaningful correlation and so are silently removed from the visualization&mdash;in this case for instance the
+datetime and injury number columns, which are completely filled, are not included.
 
 The heatmap works great for picking out data completeness relationships between variable pairs, but its visual power
 is limited when it comes to larger relationships.
