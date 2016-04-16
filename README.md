@@ -17,6 +17,7 @@ The `msno.matrix` nullity matrix is a data-dense display which lets you quickly 
  data completion.
 
     >>> import missingno as msno
+    >>> %matplotlib inline
     >>> msno.matrix(data.sample(250))
 
 ![alt text][two_hundred_fifty]
