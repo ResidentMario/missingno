@@ -314,7 +314,7 @@ def heatmap(df, inline=True,
     # Construct the base heatmap.
     if labels:
         sns.heatmap(corr_mat, mask=mask, cmap=cmap, ax=ax0, cbar=False,
-                    annot=True, fmt='.1f', annot_kws={"size": fontsize - 2})
+                    annot=True, annot_kws={"size": fontsize - 2})
     else:
         sns.heatmap(corr_mat, mask=mask, cmap=cmap, ax=ax0, cbar=False)
 
@@ -327,8 +327,19 @@ def heatmap(df, inline=True,
 
     # Fix up annotation label rendering.
     for text in ax0.texts:
-        text.set_text(text.get_text().replace("-0.0", "").replace("0.0", "")
-                      .replace("1.0", "1"))
+        t = float(text.get_text())
+        if 0.95 <= t < 1:
+            text.set_text("<1")
+        elif -1 < t <= -0.95:
+            text.set_text(">-1")
+        elif t == 1:
+            text.set_text("1")
+        elif t == -1:
+            text.set_text("-1")
+        elif -0.05 < t < 0.05:
+            text.set_text("")
+        else:
+            text.set_text(round(t, 1))
 
     # Plot if inline, return the figure if not.
     if inline:
