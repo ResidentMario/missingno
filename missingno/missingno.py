@@ -126,7 +126,7 @@ def matrix(df,
     more information.
     :param sort: The sort to apply to the heatmap. Should be one of "ascending", "descending", or None. See
     `nullity_sort()` for more information.
-    :param figsize: The size of the figure to display. This is a `matplotlib` parameter which defaults to (20, 12).
+    :param figsize: The size of the figure to display. This is a `matplotlib` parameter which defaults to (20, 10).
     :param fontsize: The figure's font size.
     :param labels: Whether or not to display the column names. Would need to be turned off on particularly large
     displays. Defaults to True.
@@ -320,7 +320,7 @@ def heatmap(df, inline=True,
 
     # Apply visual corrections and modifications.
     ax0.set_xticklabels(ax0.xaxis.get_majorticklabels(), rotation=45, ha='left', fontsize=fontsize)
-    ax0.set_yticklabels(ax0.yaxis.get_majorticklabels(), fontsize=fontsize)
+    ax0.set_yticklabels(ax0.yaxis.get_majorticklabels(), rotation=0, fontsize=fontsize)
 
     ax0.xaxis.tick_top()
     ax0.patch.set_visible(False)
