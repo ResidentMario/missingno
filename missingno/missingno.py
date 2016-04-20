@@ -116,8 +116,6 @@ def matrix(df,
            ):
     """
     :param df: The DataFrame whose completeness is being nullity matrix mapped.
-    :param inline: Whether or not to display the plot. If this is set to False (it is True by default), instead of
-    displaying the plot missingno will return its figure.
     :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default). See
     `nullity_filter()` for more information.
     :param n: The cap on the number of columns to include in the filtered DataFrame. See  `nullity_filter()` for
@@ -134,8 +132,7 @@ def matrix(df,
     :param width_ratios: The ratio of the width of the matrix to the width of the sparkline. Defaults to `(15,
     1)`. Does nothing if `sparkline=False`.
     :param color: The color of the filled columns. Default is a medium dark gray: the RGB multiple `(0.25, 0.25, 0.25)`.
-    :return: If `inline=True` this method does not return anything. If `inline=False`, returns the underlying
-    `matplotlib.figure`.
+    :return: Returns the underlying `matplotlib.figure` object.
     """
     # Apply filters and sorts.
     df = nullity_filter(df, filter=filter, n=n, p=p)
@@ -190,7 +187,7 @@ def matrix(df,
 
     # Set up the two top-bottom row ticks.
     ax0.set_yticks([0, df.shape[0] - 1])
-    ax0.set_yticklabels([1, df.shape[0]], fontsize=20)
+    ax0.set_yticklabels([1, df.shape[0]], fontsize=20, rotation=0)
     # Create the inter-column vertical grid.
     in_between_point = [x + 0.5 for x in range(0, width - 1)]
     for in_between_point in in_between_point:
@@ -260,10 +257,7 @@ def matrix(df,
         ax1.xaxis.set_ticks_position('none')
 
     # Plot if inline, return the figure if not.
-    if inline:
-        plt.show()
-    else:
-        return fig
+    return fig
 
 
 def heatmap(df, inline=True,
@@ -272,8 +266,6 @@ def heatmap(df, inline=True,
             ):
     """
     :param df: The DataFrame whose completeness is being heatmapped.
-    :param inline: Whether or not to display the plot. If this is set to False (it is True by default), instead of
-    displaying the plot missingno will return its figure.
     :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default). See
     `nullity_filter()` for more information.
     :param n: The cap on the number of columns to include in the filtered DataFrame. See  `nullity_filter()` for
@@ -286,8 +278,7 @@ def heatmap(df, inline=True,
     :param fontsize: The figure's font size.
     :param labels: Whether or not to label each matrix entry with its correlation (default is True).
     :param cmap: What `matplotlib` colormap to use. Defaults to `RdBu`.
-    :return: If `inline=True` this method does not return anything. If `inline=False`, returns the underlying
-    `matplotlib.figure`.
+    :return: Returns the underlying `matplotlib.figure` object.
     """
     # Apply filters and sorts.
     df = nullity_filter(df, filter=filter, n=n, p=p)
@@ -320,7 +311,7 @@ def heatmap(df, inline=True,
 
     # Apply visual corrections and modifications.
     ax0.set_xticklabels(ax0.xaxis.get_majorticklabels(), rotation=45, ha='left', fontsize=fontsize)
-    ax0.set_yticklabels(ax0.yaxis.get_majorticklabels(), fontsize=fontsize)
+    ax0.set_yticklabels(ax0.yaxis.get_majorticklabels(), fontsize=fontsize, rotation=0)
 
     ax0.xaxis.tick_top()
     ax0.patch.set_visible(False)
@@ -341,14 +332,10 @@ def heatmap(df, inline=True,
         else:
             text.set_text(round(t, 1))
 
-    # Plot if inline, return the figure if not.
-    if inline:
-        plt.show()
-    else:
-        return fig
+    return fig
 
 
-def dendrogram(df, method='average', inline=True,
+def dendrogram(df, method='average',
                filter=None, n=0, p=0, sort=None,
                orientation=None, figsize=(25, 10),
                fontsize=0
@@ -357,8 +344,6 @@ def dendrogram(df, method='average', inline=True,
     :param df: The DataFrame whose completeness is being dendrogrammed.
     :param method: The distance measure being used for clustering. This is a parameter that is passed to 
     `scipy.hierarchy`.
-    :param inline: Whether or not to display the plot. If this is set to False (it is True by default), instead of 
-    displaying the plot missingno will return its figure.
     :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default). See
     `nullity_filter()` for more information.
     :param n: The cap on the number of columns to include in the filtered DataFrame. See  `nullity_filter()` for
@@ -371,8 +356,7 @@ def dendrogram(df, method='average', inline=True,
     :param fontsize: The figure's font size.
     :param orientation: The way the dendrogram is oriented. Defaults to top-down if there are less than or equal to 50
     columns and left-right if there are more.
-    :return: If `inline=True` this method does not return anything. If `inline=False`, returns the underlying
-    `matplotlib.figure`.
+    :return: Returns the underlying `matplotlib.figure` object.
     """
     # Set up the figure.
     fig = plt.figure(figsize=figsize)
@@ -433,8 +417,4 @@ def dendrogram(df, method='average', inline=True,
     else:
         ax0.tick_params(axis='x', labelsize=20)
 
-    # Plot if inline, return the figure if not.
-    if inline:
-        plt.show()
-    else:
-        return fig
+    return fig
