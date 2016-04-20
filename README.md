@@ -158,11 +158,11 @@ of the dendrogram. Defaults to `top` if `<=50` columns and
 
 ### Advanced configuration
 If you are not satisfied with these admittedly basic configuration parameters, the display can be further manipulated
-in any way you like using `matplotlib` post-facto. To do so, pass the `inline=False` argument to any of the
-visualization methods&mdash;doing so will cause `missingno` to return the underlying `matplotlib.figure` object
-instead of plotting it. Anyone with sufficient knowledge of `matplotlib` operations and
-[the missingno source code](https://github.com/ResidentMario/missingno/blob/master/missingno/missingno.py) can then
-tweak the display to their liking.
+in any way you like using `matplotlib` post-facto.
+
+Every `missingno` visualization method returns its underlying `matplotlib.figure.Figure` object. Anyone with
+sufficient knowledge of `matplotlib` operations and [the missingno source code](https://github.com/ResidentMario/missingno/blob/master/missingno/missingno.py)
+can then tweak the display to their liking.
 
 Note that this may not be as well-behaved as I would like it to be. I'm still testing configuration&mdash;if you have
 any issues be sure to [file them]((https://github.com/ResidentMario/missingno/issues)).
