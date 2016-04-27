@@ -111,10 +111,9 @@ def nullity_filter(df, filter=None, p=0, n=0):
 
 
 def matrix(df,
-           filter=None, n=0, p=0,
-           sort=None,
-           figsize=(20, 10), width_ratios=(15, 1), color=(0.25, 0.25, 0.25),
-           fontsize=16, labels=True, sparkline=True, inline=True
+           filter=None, n=0, p=0, sort=None,
+           figsize=(25, 10), width_ratios=(15, 1), color=(0.25, 0.25, 0.25),
+           fontsize=16, labels=None, sparkline=True, inline=True, flip=None
            ):
     """
     Presents a `matplotlib` matrix visualization of the nullity of the given DataFrame.
@@ -124,8 +123,9 @@ def matrix(df,
     be confusing.
     
     
-    The default vertical display will fit up to 50 columns. If more than 50 columns are specified and orientation is
-    left unspecified the matrix will automatically swap to a horizontal display to fit the additional variables.
+    The default vertical display will fit up to 50 columns. If more than 50 columns are specified and the labels
+    parameter is left unspecified the visualization will automatically drop the labels as they will not be very
+    readable. You can override this behavior using `labels=True` and your own `fontsize` parameter.
 
     
     :param df: The DataFrame whose completeness is being nullity matrix mapped.
@@ -137,14 +137,20 @@ def matrix(df,
     more information.
     :param sort: The sort to apply to the heatmap. Should be one of "ascending", "descending", or None. See
     `nullity_sort()` for more information.
-    :param figsize: The size of the figure to display. This is a `matplotlib` parameter which defaults to (20, 10).
-    :param fontsize: The figure's font size.
+    :param figsize: The size of the figure to display. This is a `matplotlib` parameter.
+    For the vertical configuration this defaults to (20, 10); the horizontal configuration computes a sliding value
+    by default based on the number of columns that need to be displayed.
+    :param fontsize: The figure's font size. This default to 16.
     :param labels: Whether or not to display the column names. Would need to be turned off on particularly large
     displays. Defaults to True.
     :param sparkline: Whether or not to display the sparkline. Defaults to True.
     :param width_ratios: The ratio of the width of the matrix to the width of the sparkline. Defaults to `(15,
     1)`. Does nothing if `sparkline=False`.
     :param color: The color of the filled columns. Default is a medium dark gray: the RGB multiple `(0.25, 0.25, 0.25)`.
+    :param flip: The default matrix orientation is top-down, with column on the vertical and rows on the horizontal---
+    just like a table. However, for large displays (> 50 by default) display in this format becomes uncomfortable, so
+    the display gets flipped. This parameter is specified to be True if there are more than 50 columns and False
+    otherwise.
     :return: Returns the underlying `matplotlib.figure` object.
     """
     # Apply filters and sorts.
@@ -156,15 +162,17 @@ def matrix(df,
 
     # z is the color-mask array.
     z = df.notnull().values
-
+    
     # g is a NxNx3 matrix
     g = np.zeros((height, width, 3))
 
     # Apply the z color-mask to set the RGB of each pixel.
     g[z < 0.5] = [1, 1, 1]
     g[z > 0.5] = color
-    
+        
     # Set up the matplotlib grid layout.
+    # If the sparkline is removed the layout is a unary subplot.
+    # If the sparkline is included the layout is a left-right subplot.
     fig = plt.figure(figsize=figsize)
     if sparkline:
         gs = gridspec.GridSpec(1, 2, width_ratios=width_ratios)
@@ -191,7 +199,9 @@ def matrix(df,
     ax0.spines['left'].set_visible(False)
 
     # Set up and rotate the column ticks.
-    if labels:
+    # The labels argument is set to None by default. If the user specifies it in the argument,
+    # respect that specification. Otherwise display for <= 50 columns and do not display for > 50.
+    if labels or (labels == None and len(df.columns) <= 50):
         ha = 'left'
         ax0.set_xticks(list(range(0, width)))
         ax0.set_xticklabels(list(df.columns), rotation=45, ha=ha, fontsize=fontsize)

@@ -2,14 +2,18 @@
 
 Messy datasets? Missing values? `missingno` provides a small toolset of flexible and easy-to-use missing data
 visualizations and utilities that allows you to get a quick visual summary of the completeness (or lack thereof) of
-your dataset. It's built using `matplotlib`, so it's fast, and takes any `pandas.DataFrame` input that you throw at
+your dataset. It's built using `matplotlib`, so it's fast, and takes any `pandas` `DataFrame` input that you throw at
 it, so it's flexible. Just `pip install missingno` to get started.
 
 ## Quickstart
 
-All examples use the [NYPD Motor Vehicle Collisions Dataset](https://data.cityofnewyork.us/Public-Safety/NYPD-Motor-Vehicle-Collisions/h9gi-nx95).
+Examples use the [NYPD Motor Vehicle Collisions Dataset](https://data.cityofnewyork.us/Public-Safety/NYPD-Motor-Vehicle-Collisions/h9gi-nx95)
+([cleaned up](https://github.com/ResidentMario/motor-vehicle-collisions/blob/master/NYPD%20Motor%20Vehicle%20Collisions.ipynb))
+and the [PLUTO Housing Sales Dataset](http://www1.nyc.gov/site/planning/data-maps/open-data/dwn-pluto-mappluto.page)
+ ([cleaned up](https://github.com/ResidentMario/nyc-buildings/blob/master/nyc_building_sales.csv)).
 
-I take **nullity** to mean whether a particular variable is filled in or not.
+
+In the following walkthrough I take **nullity** to mean whether a particular variable is filled in or not.
 
 ### Matrix
 
@@ -18,7 +22,7 @@ The `msno.matrix` nullity matrix is a data-dense display which lets you quickly 
 
     >>> import missingno as msno
     >>> %matplotlib inline
-    >>> msno.matrix(data.sample(250))
+    >>> msno.matrix(collision_data.sample(250))
 
 ![alt text][two_hundred_fifty]
 
@@ -30,12 +34,24 @@ completely populated, while geographic information seems mostly complete, but sp
 The sparkline at right summarizes the general shape of the data completeness and points out the maximum and minimum
 rows.
 
+This visualization will comfortably accommodate up to 50 labelled variables. Past that range labels begin to overlap
+or become unreadable, and by default large displays omit them.
+
+    >>> msno.matrix(housing_data.sample(250))
+
+![alt text][large_matrix]
+
+[large_matrix]: http://i.imgur.com/yITFVju.png
+
+You can override this behavior by specifying `labels=True`. In that case you will also want to set your own
+`fontsize` value. We'll look at these parameters more late.r
+
 ### Heatmap
 
 The missingno correlation heatmap lets you measure how strongly the presence of one variable positively or negatively
 affect the presence of another:
 
-    >>> msno.heatmap(data)
+    >>> msno.heatmap(collision_data)
 
 ![alt text][heatmap]
 
@@ -57,7 +73,7 @@ meaningful correlation and so are silently removed from the visualization&mdash;
 datetime and injury number columns, which are completely filled, are not included.
 
 The heatmap works great for picking out data completeness relationships between variable pairs, but its visual power
-is limited when it comes to larger relationships.
+is limited when it comes to larger relationships and it has no particular support for extremely large datasets.
 
 
 ### Dendrogram
@@ -65,7 +81,7 @@ is limited when it comes to larger relationships.
 The dendrogram allows you to more fully correlate variable completion, revealing trends deeper than the pairwise
 ones visible in the correlation heatmap:
 
-    >>> msno.dendrogram(data)
+    >>> msno.dendrogram(collision_data)
 
 ![alt text][dendrogram]
 
@@ -87,6 +103,16 @@ your own interpretation of the dataset is that these columns actually *are* or *
 nullity (for example, as `CONTRIBUTING FACTOR VEHICLE 2` and `VEHICLE TYPE CODE 2` ought to), then the height of the
 cluster leaf tells you, in absolute terms, how often the records are "mismatched" or incorrectly filed&mdash;that is,
  how many values you would have to fill in or drop, if you are so inclined.
+
+As with `matrix`, only up to 50 labeled columns will comfortably display in this configuration. However the
+`dendrogram` more elegantly handles extremely large datasets by simply flipping to a horizontal configuration.
+
+    >>> msno.dendrogram(housing_data)
+
+![alt text][large-dendrogram]
+
+[large-dendrogram]: http://i.imgur.com/HDa06O9.png
+
 
 ### Sorting and filtering
 
@@ -133,10 +159,13 @@ Each of the visualizations provides a further set of lesser configuration parame
 
 `matrix`, `heatmap`, and `dendrogram` all provide:
 
-* `figsize`: The size of the figure to display. This is a `matplotlib` parameter which defaults to `(20, 12)`.
-* `fontsize`: The figure's font size. A default size configured on the fly based on the `figsize` and the number of
-columns.
-* `labels`: Whether or not to display the column names. Defaults to `True`. Needs to be turned off for large datasets.
+* `figsize`: The size of the figure to display. This is a `matplotlib` parameter which defaults to `(20, 12)`, except
+ for large `dendrogram` visualizations, which compute a height on the fly based on the number of variables to display.
+* `fontsize`: The figure's font size. The default is `16`.
+* `labels`: Whether or not to display the column names. For `matrix` this defaults to `True` for `<=50` variables and
+ `False` for `>50`. It always defaults to `True` for `dendrogram` and `heatmap`.
+* `inline`: Defaults to `True`, in which case the chart is plotted and nothing is returned. If this is set to `False`
+the methods omit plotting and return their visualizations instead.
 
 `matrix` also provides:
 * `sparkline`: Set this to `False` to not draw the sparkline.
