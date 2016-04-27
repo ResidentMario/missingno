@@ -105,7 +105,7 @@ def _set_font_size(fig, df, fontsize):
     if fontsize:
         return fontsize
     else:
-        return min(int((fig.get_size_inches()[1] * 0.8) * fig.dpi / len(df.columns) - 5), 20)
+        return max(min(20, int((fig.get_size_inches()[1] * 0.7) * fig.dpi / len(df.columns))), 16)
 
 
 def matrix(df,
