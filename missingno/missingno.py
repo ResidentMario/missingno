@@ -257,7 +257,10 @@ def matrix(df,
         ax1.xaxis.set_ticks_position('none')
 
     # Plot if inline, return the figure if not.
-    return fig
+    if inline:
+        plt.show()
+    else:
+        return fig
 
 
 def heatmap(df, inline=True,
@@ -333,13 +336,16 @@ def heatmap(df, inline=True,
         else:
             text.set_text(round(t, 1))
 
-    return fig
+    if inline:
+        plt.show()
+    else:
+        return fig
 
-
+    
 def dendrogram(df, method='average',
                filter=None, n=0, p=0, sort=None,
                orientation=None, figsize=(25, 10),
-               fontsize=0
+               fontsize=0, inline=True
                ):
     """
     :param df: The DataFrame whose completeness is being dendrogrammed.
@@ -418,4 +424,7 @@ def dendrogram(df, method='average',
     else:
         ax0.tick_params(axis='x', labelsize=20)
 
-    return fig
+    if inline:
+        plt.show()
+    else:
+        return fig
