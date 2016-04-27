@@ -23,8 +23,7 @@ def _descending_sort(df):
 
 def nullity_sort(df, sort=None):
     """
-    Conglomerate method for sorting a DataFrame.
-    Calls on the above functions to achieve its purpose.
+    Sorts a DataFrame according to its nullity, in either ascending or descending order.
 
     :param df: The DataFrame object being sorted.
     :param sort: The sorting method: either "ascending", "descending", or None (default).
@@ -72,16 +71,19 @@ def _p_bottom_complete_filter(df, p):
 
 def nullity_filter(df, filter=None, p=0, n=0):
     """
-    Conglomerate method for filtering a DataFrame. Percentage and numerical filter values may be specified
-    simultaneously.
+    Filters a DataFrame according to its nullity, using some combination of 'top' and 'bottom' numerical and
+    percentage values. Percentages and numerical thresholds can be specified simultaneously: for example,
+    to get a DataFrame with columns of at least 75% completeness but with no more than 5 columns, use
+    `nullity_filter(df, filter='top', p=.75, n=5)`.
 
     :param df: The DataFrame whose columns are being filtered.
     :param filter: The orientation of the filter being applied to the DataFrame. One of, "top", "bottom",
-    or None (default).
+    or None (default). The filter will simply return the DataFrame if you leave the filter argument unspecified or
+    as None.
     :param p: A completeness ratio cut-off. If non-zero the filter will limit the DataFrame to columns with at least p
     completeness. Input should be in the range [0, 1].
     :param n: A numerical cut-off. If non-zero no more than this number of columns will be returned.
-    :return: The nullity-filtered DataFrame.
+    :return: The nullity-filtered `DataFrame`.
     """
     _df = df
     if filter == "top":
@@ -97,24 +99,35 @@ def nullity_filter(df, filter=None, p=0, n=0):
     return _df
 
 
-def _set_font_size(fig, df, fontsize):
-    """
-    Guesses an appropriate fontsize for the given columnar visualization text labels.
-    Used if a fontsize is not provided via a parameter.
-    """
-    if fontsize:
-        return fontsize
-    else:
-        return max(min(20, int((fig.get_size_inches()[1] * 0.7) * fig.dpi / len(df.columns))), 16)
+# def _set_font_size(fig, df, fontsize):
+#     """
+#     Guesses an appropriate fontsize for the given columnar visualization text labels.
+#     Used if a fontsize is not provided via a parameter.
+#     """
+#     if fontsize:
+#         return fontsize
+#     else:
+#         return max(min(20, int((fig.get_size_inches()[1] * 0.7) * fig.dpi / len(df.columns))), 16)
 
 
 def matrix(df,
            filter=None, n=0, p=0,
            sort=None,
            figsize=(20, 10), width_ratios=(15, 1), color=(0.25, 0.25, 0.25),
-           fontsize=0, labels=True, sparkline=True, inline=True
+           fontsize=16, labels=True, sparkline=True, inline=True
            ):
     """
+    Presents a `matplotlib` matrix visualization of the nullity of the given DataFrame.
+    
+    Note that for the default `figsize` 250 is a soft display limit: specifying a number of records greater than
+    approximately this value will cause certain records to show up in the sparkline but not in the matrix, which can
+    be confusing.
+    
+    
+    The default vertical display will fit up to 50 columns. If more than 50 columns are specified and orientation is
+    left unspecified the matrix will automatically swap to a horizontal display to fit the additional variables.
+
+    
     :param df: The DataFrame whose completeness is being nullity matrix mapped.
     :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default). See
     `nullity_filter()` for more information.
@@ -150,7 +163,7 @@ def matrix(df,
     # Apply the z color-mask to set the RGB of each pixel.
     g[z < 0.5] = [1, 1, 1]
     g[z > 0.5] = color
-
+    
     # Set up the matplotlib grid layout.
     fig = plt.figure(figsize=figsize)
     if sparkline:
@@ -164,7 +177,7 @@ def matrix(df,
     ax0.imshow(g, interpolation='none')
 
     # Set fontsize.
-    fontsize = _set_font_size(fig, df, fontsize)
+    # fontsize = _set_font_size(fig, df, fontsize)
 
     # Remove extraneous default visual elements.
     ax0.set_aspect('auto')
@@ -265,9 +278,14 @@ def matrix(df,
 
 def heatmap(df, inline=True,
             filter=None, n=0, p=0, sort=None,
-            figsize=(20, 12), fontsize=0, labels=True, cmap='RdBu'
+            figsize=(20, 12), fontsize=16, labels=True, cmap='RdBu'
             ):
     """
+    Presents a `seaborn` heatmap visualization of nullity correlation in the given DataFrame.
+    
+    Note that this visualization has no special support for large datasets. For those, try the dendrogram instead.
+    
+
     :param df: The DataFrame whose completeness is being heatmapped.
     :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default). See
     `nullity_filter()` for more information.
@@ -303,7 +321,7 @@ def heatmap(df, inline=True,
     mask[np.triu_indices_from(mask)] = True
 
     # Set fontsize.
-    fontsize = _set_font_size(fig, df, fontsize)
+    # fontsize = _set_font_size(fig, df, fontsize)
 
     # Construct the base heatmap.
     if labels:
@@ -344,10 +362,16 @@ def heatmap(df, inline=True,
     
 def dendrogram(df, method='average',
                filter=None, n=0, p=0, sort=None,
-               orientation=None, figsize=(25, 10),
-               fontsize=0, inline=True
+               orientation=None, figsize=None,
+               fontsize=16, inline=True
                ):
     """
+    Fits a `scipy` hierarchical clustering algorithm to the given DataFrame's variables and visualizes the results as
+    a `scipy` dendrogram.
+    
+    The default vertical display will fit up to 50 columns. If more than 50 columns are specified and orientation is
+    left unspecified the dendrogram will automatically swap to a horizontal display to fit the additional variables.
+
     :param df: The DataFrame whose completeness is being dendrogrammed.
     :param method: The distance measure being used for clustering. This is a parameter that is passed to 
     `scipy.hierarchy`.
@@ -365,6 +389,13 @@ def dendrogram(df, method='average',
     columns and left-right if there are more.
     :return: Returns the underlying `matplotlib.figure` object.
     """
+    # Figure out the appropriate figsize.
+    if not figsize:
+        if len(df.columns) <= 50 or orientation == 'top' or orientation == 'bottom':
+            figsize = (25, 10)
+        else:
+            figsize = (25, (25 + len(df.columns) - 50)*0.5)
+    
     # Set up the figure.
     fig = plt.figure(figsize=figsize)
     gs = gridspec.GridSpec(1, 1)
@@ -375,10 +406,10 @@ def dendrogram(df, method='average',
     df = nullity_sort(df, sort=sort)
 
     # Set font size.
-    if orientation == 'top' or orientation == 'bottom':
-        fontsize = _set_font_size(fig, df, fontsize)
-    else:
-        fontsize = 20
+    # if orientation == 'top' or orientation == 'bottom':
+    #     fontsize = _set_font_size(fig, df, fontsize)
+    # else:
+    #     fontsize = 20
 
     # Link the hierarchical output matrix.
     x = np.transpose(df.isnull().astype(int).values)
