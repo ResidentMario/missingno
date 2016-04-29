@@ -44,7 +44,8 @@ or become unreadable, and by default large displays omit them.
 [large_matrix]: http://i.imgur.com/yITFVju.png
 
 You can override this behavior by specifying `labels=True`. In that case you will also want to set your own
-`fontsize` value. We'll look at these parameters more late.r
+`fontsize` value. These optional parameters are among those covered in more detail in the
+[Visual configuration](#visual-configuration) section.
 
 ### Heatmap
 
@@ -189,23 +190,31 @@ of the dendrogram. Defaults to `top` if `<=50` columns and
 If you are not satisfied with these admittedly basic configuration parameters, the display can be further manipulated
 in any way you like using `matplotlib` post-facto.
 
-Every `missingno` visualization method returns its underlying `matplotlib.figure.Figure` object. Anyone with
-sufficient knowledge of `matplotlib` operations and [the missingno source code](https://github.com/ResidentMario/missingno/blob/master/missingno/missingno.py)
-can then tweak the display to their liking.
+The best way to do this is to specify `inline=False`, which will cause `missingno` to return the underlying
+`matplotlib.figure.Figure` object. Anyone with sufficient knowledge of `matplotlib` operations and [the missingno source code](https://github.com/ResidentMario/missingno/blob/master/missingno/missingno.py)
+can then tweak the display to their liking. For example, the following code will bump the size of the dendrogram
+visualization's y-axis labels up from `20` to `30`:
+
+    >>> mat = msno.dendrogram(collision_data, inline=False)
+        mat.axes[0].tick_params(axis='y', labelsize=30)
+
+Note that if you are running `matplotlib` line in [inline plotting mode](http://www.scipy-lecture.org/intro/matplotlib/matplotlib.html#ipython-and-the-matplotlib-mode)
+ (as was done above) it will always plot at the end of the cell anyway, so if you do not want to plot the same
+ visualization multiple times you will want to do all of your manipulations in a single cell!
 
 Note that this may not be as well-behaved as I would like it to be. I'm still testing configuration&mdash;if you have
 any issues be sure to [file them]((https://github.com/ResidentMario/missingno/issues)).
 
 ## Further reading
 
-If you're interested in learning more about working with missing data in Python check out [my tutorial on the
-subject](http://nbviewer.jupyter.org/github/ResidentMario/python-missing-data/blob/master/missing-data.ipynb).
+If you're interested in learning more about working with missing data in Python check out [my exploratory tutorial on
+ the subject](http://nbviewer.jupyter.org/github/ResidentMario/python-missing-data/blob/master/missing-data.ipynb).
 
-For more on this module's ideation check out [this post on my personal blog](http://www.residentmar.io/2016/03/28/missingno.html).
+For slightly more details on this module's ideation check out [this post on my personal blog](http://www.residentmar.io/2016/03/28/missingno.html).
 
 
 ## Contributing
 
 Bugs? Thoughts? Feature requests? [Throw them at the bug tracker and I'll take a look](https://github.com/ResidentMario/missingno/issues).
 
-As always I'm very interested in hearing feedback: you can also reach out to me at `aleksey@residentmar.io`.
+As always I'm very interested in hearing feedback&mdash;reach out to me at `aleksey@residentmar.io`.
