@@ -544,6 +544,7 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
             df['__y'] = coord_col[:, 1]
     else:
         raise IndexError("x AND y OR coordinates parameters expected.")
+
     # In case we're given something to categorize by, use that.
     if by:
         # This loop calculates and stores geographic feature averages and their convex hulls.
@@ -553,20 +554,37 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
             # will produce a `LineString` hull. Neither of these is desired, nor accepted by `PatchCollection`
             # further on. So we remove these cases by filtering them (1) before and (2) after aggregation steps.
             # cf. http://toblerity.org/shapely/manual.html#object.convex_hull
-            if len(geo_group) > 2:
-                # The following subroutine groups `geo_group` by `x_col` and `y_col`, and calculates and returns
-                # a list of points in the group (`points`) as well as its overall nullity (`geographic_nullity`).
-                points, geographic_nullity = _calculate_geographic_nullity(geo_group, x_col, y_col)
-                # If no geometry is provided, calculate and store the hulls and averages.
-                # If thinning the points, above, reduced us below the threshold for a proper polygonal hull (See the
-                # note at the beginning of thos loop), stop here.
-                if not geometry:
-                    if len(points) > 2:
-                        hull = shapely.geometry.MultiPoint(points).convex_hull
-                        nullities[identifier] = {'nullity': geographic_nullity, 'shape': hull}
-                # If geometry is provided, use that instead.
-                else:
-                    nullities[identifier] = {'nullity': geographic_nullity, 'shape': geometry[identifier]}
+            if not len(geo_group) > 2:
+                continue
+
+            # The following subroutine groups `geo_group` by `x_col` and `y_col`, and calculates and returns
+            # a list of points in the group (`points`) as well as its overall nullity (`geographic_nullity`).
+            points, geographic_nullity = _calculate_geographic_nullity(geo_group, x_col, y_col)
+
+            # If thinning the points, above, reduced us below the threshold for a proper polygonal hull (See the
+            # note at the beginning of thos loop), stop here.
+            if not len(points) > 2:
+                continue
+
+            # If no geometry is provided, calculate and store the hulls and averages.
+            if geometry is None:
+                    hull = shapely.geometry.MultiPoint(points).convex_hull
+                    nullities[identifier] = {'nullity': geographic_nullity, 'shapes': [hull]}
+
+            # If geometry is provided, use that instead.
+            else:
+                print(identifier)
+                geom = geometry[identifier]
+                polygons = []
+                # Valid polygons are simple polygons (`shapely.geometry.Polygon`) and complex multi-piece polygons
+                # (`shapely.geometry.MultiPolygon`). The latter is an iterable of its components, so if the shape is
+                # a `MultiPolygon`, append it as that list. Otherwise if the shape is a basic `Polygon`,
+                # append a list with one element, the `Polygon` itself.
+                if isinstance(geom, shapely.geometry.MultiPolygon):
+                    polygons = shapely.ops.cascaded_union([p for p in geometry])
+                else:  # shapely.geometry.Polygon
+                    polygons = [geom]
+                nullities[identifier] = {'nullity': geographic_nullity, 'shape': polygons}
 
         # Prepare a colormap.
         nullity_avgs = [nullities[key]['nullity'] for key in nullities.keys()]
@@ -575,8 +593,9 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
         # Now we draw.
         fig = plt.figure(figsize=(25, 10))
         ax = fig.add_subplot(111)
-        for i, hull in enumerate([(nullities[key]['shape']) for key in nullities.keys()]):
-            ax.add_patch(descartes.PolygonPatch(hull, fc=cmap[i], ec='white', alpha=0.8, zorder=4))
+        for i, polygons in enumerate([(nullities[key]['shape']) for key in nullities.keys()]):
+            for polygon in polygons:
+                ax.add_patch(descartes.PolygonPatch(polygon, fc=cmap[i], ec='white', alpha=0.8, zorder=4))
         ax.axis('image')
         # Remove extraneous plotting elements.
         ax.grid(b=False)
@@ -584,8 +603,9 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
         ax.get_yaxis().set_visible(False)
         ax.patch.set_visible(False)
         plt.show()
+
     # In case we aren't given something to categorize by, we choose a spatial representation that's reasonably
-    # efficient and informative: nested squares.
+    # efficient and informative: quadtree squares.
     # Note: SVD could perhaps be applied to the axes to discover point orientation and realign the grid to match
     # that, but I'm uncertain that this computationally acceptable and, in the case of comparisons, even a good
     # design choice. Perhaps this could be implemented at a later date.
@@ -646,4 +666,3 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
         # TODO: Implement a lower cutoff?
         # TODO: Figure out why mplleaflet doesn't integrate with this.
         # TODO: Add color key.
-        # TODO: Add geometries option.
