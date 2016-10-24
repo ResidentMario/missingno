@@ -484,18 +484,27 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None):
     # Wall time: 12.7 s
     # >>> %time df.head(100000).groupby('LOCATION').count()
     # Wall time: 96 ms
+    x_col = '__x'
+    y_col = '__y'
     if x and y:
-        coord_col = '__coords'
         if isinstance(x, str) and isinstance(y, str):
-            df['__coords'] = list(zip(df[x], df[y]))
+            # df['__coords'] = list(zip(df[x], df[y]))
+            x_col = x
+            y_col = y
         else:
-            df['__coords'] = list(zip(x, y))
+            df['__x'] = x
+            df['__y'] = y
     elif coordinates:
         if isinstance(coordinates, str):
-            coord_col = coordinates
+            # Quick conversion to enable fancy numpy indexing. This allows fast operations like `df[coord_col][0,...]`
+            coord_col = np.array([np.array(e) if pd.notnull(e) else np.array(np.nan, np.nan) for e in df[coordinates]])
+            df['__x'] = coord_col[:, 0]
+            df['__y'] = coord_col[:, 1]
         else:
-            df['__coords'] = coordinates
-            coord_col = '__coords'
+            # cf. Above.
+            coord_col = np.array([np.array(e) for e in coordinates])
+            df['__x'] = coord_col[:, 0]
+            df['__y'] = coord_col[:, 1]
     else:
         raise IndexError("x AND y OR coordinates parameters expected.")
     # In case we're given something to categorize by, use that.
@@ -508,7 +517,7 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None):
             # further on. So we remove these cases.
             # cf. http://toblerity.org/shapely/manual.html#object.convex_hull
             if len(geo_group) > 2:
-                point_groups = geo_group.groupby(coord_col)
+                point_groups = geo_group.groupby([x_col, y_col])
                 # Calculate nullities by location, then take their average within the overall feature.
                 counts = point_groups.count().apply(lambda srs: srs.sum(), axis='columns')
                 entries = point_groups.apply(len)
@@ -544,28 +553,29 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None):
         # TODO: Add color key.
         # TODO: Add geometries option.
     # In case we aren't given something to categorize by, we choose a spatial representation that's reasonably
-    # efficient and informative: nested squares
+    # efficient and informative: nested squares.
     # Note: SVD could perhaps be applied to the axes to discover point orientation and realign the grid to match
     # that, but I'm uncertain that this computationally acceptable and, in the case of comparisons, even a good
     # design choice. Perhaps this could be implemented at a later date.
     else:
-        def squarify(min_x, max_x, min_y, max_y):
-            points_inside = df[df[coord_col].map(lambda c: (min_x < c[0] < max_x) and (min_y < c[1] < max_y))]
-            print(points_inside)
+        df = df[(pd.notnull(df[x_col])) & (pd.notnull(df[y_col]))]
+        min_x, max_x = df[x_col].min(), df[x_col].max()
+        min_y, max_y = df[y_col].min(), df[y_col].max()
+        squares = dict()
 
-        # Quick conversion to enable fancy numpy indexing. This allows fast operations like `df[coord_col][0,...]`,
-        # which are not possible if the second dimension of the array happens to be a tuple. But when a 2D `numpy`
-        # array is assigned to a DataFrame column it only takes the first entry! This is a design error on my part,
-        # as two columns, one for x and one for y, would be better. But we can push on with what we have now.
-        # TODO: Fix this?
-        print(df[coord_col])
-        print(np.array([np.array(e) for e in df[coord_col]]))
-        # Continue...
-        df[coord_col] = np.array([np.array(e) for e in df[coord_col]])
-        print(df[coord_col])
-        with df[coord_col].values[:,0] as x_col:
-            min_x, max_x = np.min(x_col), np.max(x_col)
-        with df[coord_col].values[:, 1] as y_col:
-            min_y, max_y = np.min(y_col), np.max(y_col)
-        squarify(min_x, max_x, min_y, max_y)
-        pass
+        # Recursive quadtree.
+        def squarify(_min_x, _max_x, _min_y, _max_y, position):
+            points_inside = df[df[[x_col, y_col]]\
+                .apply(lambda srs: (_min_x < srs[x_col] < _max_x) and (_min_y < srs[y_col] < _max_y), axis='columns')]
+            if len(points_inside) < 100:
+                squares[tuple(position)] = len(points_inside)  # temp
+                # TODO: Next---make this a nullity count, not a temp point count.
+            else:
+                mid_x, mid_y = (_min_x + _max_x) / 2, (_min_y + _max_y) / 2
+                squarify(_min_x, mid_x, mid_y, _max_y, position + [0])
+                squarify(_min_x, mid_x, _min_y, mid_y, position + [1])
+                squarify(mid_x, _max_x, mid_y, _max_y, position + [2])
+                squarify(mid_x, _max_x, _min_y, mid_y, position + [3])
+
+        squarify(min_x, max_x, min_y, max_y, [0])
+        print(squares)
