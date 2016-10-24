@@ -490,7 +490,7 @@ def _calculate_geographic_nullity(geo_group, x_col, y_col):
         return points, np.nan
 
 
-def geoplot(df, x=None, y=None, coordinates=None, by=None, cutoff=100):
+def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff=100):
     """
     Generates a geographical data nullity heatmap, which shows the distribution of missing data across geographic
     regions. The precise output depends on the inputs provided. In increasing order of usefulness:
@@ -557,12 +557,17 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, cutoff=100):
                 # The following subroutine groups `geo_group` by `x_col` and `y_col`, and calculates and returns
                 # a list of points in the group (`points`) as well as its overall nullity (`geographic_nullity`).
                 points, geographic_nullity = _calculate_geographic_nullity(geo_group, x_col, y_col)
-                # Calculate and store the hulls and averages.
+                # If no geometry is provided, calculate and store the hulls and averages.
                 # If thinning the points, above, reduced us below the threshold for a proper polygonal hull (See the
                 # note at the beginning of thos loop), stop here.
-                if len(points) > 2:
-                    hull = shapely.geometry.MultiPoint(points).convex_hull
-                    nullities[identifier] = {'nullity': geographic_nullity, 'shape': hull}
+                if not geometry:
+                    if len(points) > 2:
+                        hull = shapely.geometry.MultiPoint(points).convex_hull
+                        nullities[identifier] = {'nullity': geographic_nullity, 'shape': hull}
+                # If geometry is provided, use that instead.
+                else:
+                    nullities[identifier] = {'nullity': geographic_nullity, 'shape': geometry[identifier]}
+
         # Prepare a colormap.
         nullity_avgs = [nullities[key]['nullity'] for key in nullities.keys()]
         cmap = matplotlib.cm.RdBu(plt.Normalize(0, 1)(nullity_avgs))
