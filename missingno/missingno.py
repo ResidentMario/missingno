@@ -492,7 +492,7 @@ def _calculate_geographic_nullity(geo_group, x_col, y_col):
 
 
 def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff=None,
-            width_ratios=(75, 1), figsize=(25, 10), colorbar=True):
+            width_ratios=(100, 1), figsize=(25, 10), colorbar=True):
     """
     Generates a geographical data nullity heatmap, which shows the distribution of missing data across geographic
     regions. The precise output depends on the inputs provided. In increasing order of usefulness:
@@ -553,13 +553,12 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
     fig = plt.figure(figsize=figsize)
     if colorbar:
         gs = gridspec.GridSpec(1, 2, width_ratios=width_ratios)
-        gs.update(wspace=0.08)
-        print(gs)
-        print(gs[1])
+        gs.update(wspace=0.04)
         ax1 = plt.subplot(gs[1])
     else:
         gs = gridspec.GridSpec(1, 1)
     ax0 = plt.subplot(gs[0])
+    # plt.axes().set_aspect('auto')
 
     # In case we're given something to categorize by, use that.
     if by:
@@ -611,7 +610,6 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
         for i, polygons in enumerate([(nullities[key]['shapes']) for key in nullities.keys()]):
             for polygon in polygons:
                 ax0.add_patch(descartes.PolygonPatch(polygon, fc=cmap[i], ec='white', alpha=1, zorder=4))
-        ax0.axis('image')
         # Remove extraneous plotting elements.
         ax0.grid(b=False)
         ax0.get_xaxis().set_visible(False)
@@ -676,16 +674,17 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
         ax0.patch.set_visible(False)
 
         # Style the colorbar, if it's present.
-        if colorbar:
-            pass
+        # if colorbar:
+        #     ax1.set_aspect('auto')
 
         # Add colorbar. Creating colorbars is surprisingly difficult for patch collections, especially in our case
         # because we overwrite the colormap in certain cases. It doesn't appear to be possible to automatically
         # generate a oolorbar which doesn't also force exactly the given colormap onto the map (and raise an ugly
         # RuntimeWarning when it encounters nulls, which is highly likely). Given all of this, it's easiest to
         # manually create our own colorbar and add it to the plot.
-        matplotlib.colorbar.ColorbarBase(ax1, cmap=cmap, orientation='vertical',
-                                         norm=matplotlib.colors.Normalize(vmin=0, vmax=1))
+        if colorbar:
+            matplotlib.colorbar.ColorbarBase(ax1, cmap=cmap, orientation='vertical',
+                                             norm=matplotlib.colors.Normalize(vmin=0, vmax=1))
         # Display.
         plt.show()
         # TODO: Figure out why mplleaflet doesn't integrate with this.
