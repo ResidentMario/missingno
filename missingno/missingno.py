@@ -3,6 +3,7 @@ from matplotlib import gridspec
 import matplotlib.pyplot as plt
 from scipy.cluster import hierarchy
 import seaborn as sns
+import pandas as pd
 
 
 def _ascending_sort(df):
@@ -469,3 +470,102 @@ def dendrogram(df, method='average',
         plt.show()
     else:
         return fig
+
+
+def geoplot(df, x=None, y=None, coordinates=None, by=None):
+    import shapely.geometry
+    import descartes
+    import matplotlib.cm
+    # We produce a coordinate column in-place in a function-local copy of the `DataFrame`.
+    # This seems specious, and sort of is, but is necessary because the internal `pandas` aggregation methods
+    # (`pd.core.groupby.DataFrameGroupBy.count` specifically) are optimized to run two orders of magnitude faster than
+    # user-defined external `groupby` operations. For example:
+    # >>> %time df.head(100000).groupby(lambda ind: df.iloc[ind]['LOCATION']).count()
+    # Wall time: 12.7 s
+    # >>> %time df.head(100000).groupby('LOCATION').count()
+    # Wall time: 96 ms
+    if x and y:
+        coord_col = '__coords'
+        if isinstance(x, str) and isinstance(y, str):
+            df['__coords'] = list(zip(df[x], df[y]))
+        else:
+            df['__coords'] = list(zip(x, y))
+    elif coordinates:
+        if isinstance(coordinates, str):
+            coord_col = coordinates
+        else:
+            df['__coords'] = coordinates
+            coord_col = '__coords'
+    else:
+        raise IndexError("x AND y OR coordinates parameters expected.")
+    # In case we're given something to categorize by, use that.
+    if by:
+        # This loop calculates and stores geographic feature averages and their convex hulls.
+        nullities = dict()
+        for identifier, geo_group in df.groupby(by):  # ex. ('BRONX', <pd.DataFrame with 10511 objects>)
+            # A single observation in the group will produce a `Point` hull, while two observations in the group
+            # will produce a `LineString` hull. Neither of these is desired, nor accepted by `PatchCollection`
+            # further on. So we remove these cases.
+            # cf. http://toblerity.org/shapely/manual.html#object.convex_hull
+            if len(geo_group) > 2:
+                point_groups = geo_group.groupby(coord_col)
+                # Calculate nullities by location, then take their average within the overall feature.
+                counts = point_groups.count().apply(lambda srs: srs.sum(), axis='columns')
+                entries = point_groups.apply(len)
+                width = len(geo_group.columns)
+                if len(entries) > 0:  # explicit check to avoid a Runtime Warning
+                    geographic_nullity = np.average(1 - counts / width / entries)
+                else:
+                    geographic_nullity = np.nan
+                # Remove empty (NaN, NaN) points.
+                points = [point for point in counts.index.values if pd.notnull(point[0]) and pd.notnull(point[1])]
+                # Calculate and store the hulls and averages.
+                # If thinning the points, above, reduced us below the threshold for a proper polygonal hull (See the
+                # note at the beginning of thos loop), stop here.
+                if len(points) > 2:
+                    hull = shapely.geometry.MultiPoint(points).convex_hull
+                    nullities[identifier] = {'nullity': geographic_nullity, 'shape': hull}
+        # Prepare a colormap.
+        nullity_avgs = [nullities[key]['nullity'] for key in nullities.keys()]
+        cmap = matplotlib.cm.RdBu(plt.Normalize(0, 1)(nullity_avgs))
+        # Now we draw.
+        fig = plt.figure(figsize=(25, 10))
+        ax = fig.add_subplot(111)
+        for i, hull in enumerate([(nullities[key]['shape']) for key in nullities.keys()]):
+            ax.add_patch(descartes.PolygonPatch(hull, fc=cmap[i], ec='white', alpha=0.8, zorder=4))
+        ax.axis('image')
+        # Remove extraneous plotting elements.
+        ax.grid(b=False)
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        ax.patch.set_visible(False)
+        plt.show()
+        # TODO: Figure out why mplleaflet doesn't integrate with this.
+        # TODO: Add color key.
+        # TODO: Add geometries option.
+    # In case we aren't given something to categorize by, we choose a spatial representation that's reasonably
+    # efficient and informative: nested squares
+    # Note: SVD could perhaps be applied to the axes to discover point orientation and realign the grid to match
+    # that, but I'm uncertain that this computationally acceptable and, in the case of comparisons, even a good
+    # design choice. Perhaps this could be implemented at a later date.
+    else:
+        def squarify(min_x, max_x, min_y, max_y):
+            points_inside = df[df[coord_col].map(lambda c: (min_x < c[0] < max_x) and (min_y < c[1] < max_y))]
+            print(points_inside)
+
+        # Quick conversion to enable fancy numpy indexing. This allows fast operations like `df[coord_col][0,...]`,
+        # which are not possible if the second dimension of the array happens to be a tuple. But when a 2D `numpy`
+        # array is assigned to a DataFrame column it only takes the first entry! This is a design error on my part,
+        # as two columns, one for x and one for y, would be better. But we can push on with what we have now.
+        # TODO: Fix this?
+        print(df[coord_col])
+        print(np.array([np.array(e) for e in df[coord_col]]))
+        # Continue...
+        df[coord_col] = np.array([np.array(e) for e in df[coord_col]])
+        print(df[coord_col])
+        with df[coord_col].values[:,0] as x_col:
+            min_x, max_x = np.min(x_col), np.max(x_col)
+        with df[coord_col].values[:, 1] as y_col:
+            min_y, max_y = np.min(y_col), np.max(y_col)
+        squarify(min_x, max_x, min_y, max_y)
+        pass
