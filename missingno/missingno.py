@@ -472,7 +472,45 @@ def dendrogram(df, method='average',
         return fig
 
 
-def geoplot(df, x=None, y=None, coordinates=None, by=None):
+def _calculate_geographic_nullity(geo_group, x_col, y_col):
+    """
+    Helper method which calculates the nullity of a DataFrame. Factored out of and used within `geoplot`.
+    """
+    point_groups = geo_group.groupby([x_col, y_col])
+    # Calculate nullities by location, then take their average within the overall feature.
+    counts = point_groups.count().apply(lambda srs: srs.sum(), axis='columns')
+    entries = point_groups.apply(len)
+    width = len(geo_group.columns)
+    # Remove empty (NaN, NaN) points.
+    points = [point for point in counts.index.values if pd.notnull(point[0]) and pd.notnull(point[1])]
+    if len(entries) > 0:  # explicit check to avoid a Runtime Warning
+        geographic_nullity = np.average(1 - counts / width / entries)
+        return points, geographic_nullity
+    else:
+        return points, np.nan
+
+
+def geoplot(df, x=None, y=None, coordinates=None, by=None, cutoff=100):
+    """
+    Generates a geographical data nullity heatmap, which shows the distribution of missing data across geographic
+    regions. The precise output depends on the inputs provided. In increasing order of usefulness:
+
+    *   If no geographical context is provided, a quadtree is computed and nullities are rendered as abstract
+        geopgrahical squares.
+    *   If geographical context is provided in the form of a column of geographies (region, borough. ZIP code,
+        etc.) in the `DataFrame`, convex hulls are computed for each of the point groups and the heatmap is generated
+        within them.
+    *   If geographical context is provided *and* a separate geometry is provided, a heatmap is generated for each
+        point group within this geograpby instead.
+
+    :param df:
+    :param x:
+    :param y:
+    :param coordinates:
+    :param by:
+    :param cutoff:
+    :return:
+    """
     import shapely.geometry
     import descartes
     import matplotlib.cm
@@ -488,7 +526,6 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None):
     y_col = '__y'
     if x and y:
         if isinstance(x, str) and isinstance(y, str):
-            # df['__coords'] = list(zip(df[x], df[y]))
             x_col = x
             y_col = y
         else:
@@ -514,20 +551,12 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None):
         for identifier, geo_group in df.groupby(by):  # ex. ('BRONX', <pd.DataFrame with 10511 objects>)
             # A single observation in the group will produce a `Point` hull, while two observations in the group
             # will produce a `LineString` hull. Neither of these is desired, nor accepted by `PatchCollection`
-            # further on. So we remove these cases.
+            # further on. So we remove these cases by filtering them (1) before and (2) after aggregation steps.
             # cf. http://toblerity.org/shapely/manual.html#object.convex_hull
             if len(geo_group) > 2:
-                point_groups = geo_group.groupby([x_col, y_col])
-                # Calculate nullities by location, then take their average within the overall feature.
-                counts = point_groups.count().apply(lambda srs: srs.sum(), axis='columns')
-                entries = point_groups.apply(len)
-                width = len(geo_group.columns)
-                if len(entries) > 0:  # explicit check to avoid a Runtime Warning
-                    geographic_nullity = np.average(1 - counts / width / entries)
-                else:
-                    geographic_nullity = np.nan
-                # Remove empty (NaN, NaN) points.
-                points = [point for point in counts.index.values if pd.notnull(point[0]) and pd.notnull(point[1])]
+                # The following subroutine groups `geo_group` by `x_col` and `y_col`, and calculates and returns
+                # a list of points in the group (`points`) as well as its overall nullity (`geographic_nullity`).
+                points, geographic_nullity = _calculate_geographic_nullity(geo_group, x_col, y_col)
                 # Calculate and store the hulls and averages.
                 # If thinning the points, above, reduced us below the threshold for a proper polygonal hull (See the
                 # note at the beginning of thos loop), stop here.
@@ -537,6 +566,7 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None):
         # Prepare a colormap.
         nullity_avgs = [nullities[key]['nullity'] for key in nullities.keys()]
         cmap = matplotlib.cm.RdBu(plt.Normalize(0, 1)(nullity_avgs))
+
         # Now we draw.
         fig = plt.figure(figsize=(25, 10))
         ax = fig.add_subplot(111)
@@ -549,9 +579,6 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None):
         ax.get_yaxis().set_visible(False)
         ax.patch.set_visible(False)
         plt.show()
-        # TODO: Figure out why mplleaflet doesn't integrate with this.
-        # TODO: Add color key.
-        # TODO: Add geometries option.
     # In case we aren't given something to categorize by, we choose a spatial representation that's reasonably
     # efficient and informative: nested squares.
     # Note: SVD could perhaps be applied to the axes to discover point orientation and realign the grid to match
@@ -561,21 +588,57 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None):
         df = df[(pd.notnull(df[x_col])) & (pd.notnull(df[y_col]))]
         min_x, max_x = df[x_col].min(), df[x_col].max()
         min_y, max_y = df[y_col].min(), df[y_col].max()
-        squares = dict()
 
-        # Recursive quadtree.
-        def squarify(_min_x, _max_x, _min_y, _max_y, position):
+        squares = []
+
+        # Recursive quadtree. This subroutine, when, builds a dictionary of squares, stored by tuples keyed with
+        # (min_x, max_x, min_y, max_y), whose values are the nullity of squares containing less than 100 observations.
+        def squarify(_min_x, _max_x, _min_y, _max_y):
             points_inside = df[df[[x_col, y_col]]\
                 .apply(lambda srs: (_min_x < srs[x_col] < _max_x) and (_min_y < srs[y_col] < _max_y), axis='columns')]
-            if len(points_inside) < 100:
-                squares[tuple(position)] = len(points_inside)  # temp
-                # TODO: Next---make this a nullity count, not a temp point count.
+            if len(points_inside) < cutoff:
+                # The following subroutine groups `geo_group` by `x_col` and `y_col`, and calculates and returns
+                # a list of points in the group (`points`) as well as its overall nullity (`geographic_nullity`). The
+                # first of these calculations is ignored.
+                _, square_nullity = _calculate_geographic_nullity(points_inside, x_col, y_col)
+                squares.append(((_min_x, _max_x,_min_y, _max_y), square_nullity))
             else:
-                mid_x, mid_y = (_min_x + _max_x) / 2, (_min_y + _max_y) / 2
-                squarify(_min_x, mid_x, mid_y, _max_y, position + [0])
-                squarify(_min_x, mid_x, _min_y, mid_y, position + [1])
-                squarify(mid_x, _max_x, mid_y, _max_y, position + [2])
-                squarify(mid_x, _max_x, _min_y, mid_y, position + [3])
+                _mid_x, _mid_y = (_min_x + _max_x) / 2, (_min_y + _max_y) / 2
+                squarify(_min_x, _mid_x, _mid_y, _max_y)
+                squarify(_min_x, _mid_x, _min_y, _mid_y)
+                squarify(_mid_x, _max_x, _mid_y, _max_y)
+                squarify(_mid_x, _max_x, _min_y, _mid_y)
 
-        squarify(min_x, max_x, min_y, max_y, [0])
-        print(squares)
+        # Populate the `squares` array, per the above.
+        squarify(min_x, max_x, min_y, max_y)
+
+        # Prepare a colormap.
+        cmap = matplotlib.cm.RdBu(plt.Normalize(0, 1)([nullity for _, nullity in squares]))
+        # Many of the squares at the bottom of the quadtree will be inputted into the colormap as NaN values,
+        # which matplotlib will map over as minimal values. We of course don't want that, so we pull the bottom out
+        # of it.
+        # cmap = [c if (not np.isclose(c, [0.40392157, 0, 0.12156863, 1]).all()) else [1, 1, 1, 1] for c in cmap]
+        cmap = [c if pd.notnull(squares[i][1]) else [1,1,1,1] for i, c in enumerate(cmap)]
+        # Now we draw.
+        fig = plt.figure(figsize=(25, 10))
+        ax = fig.add_subplot(111)
+        # Note: we're implicitly relying on the order of the dictionary keys not changing in between the execution of
+        # the two lines above. That is, we expect the order of the keys returned while we are computing a colormap to
+        #  be the same as the order returned below, two LOC later, when applying that colormap. This is not a
+        # fashionable assumption to be making in modern Python, but it remains technically correct. If this behavior
+        # changes, then the implementation used here will have to be updated as well.
+        for i, ((min_x, max_x, min_y, max_y), _) in enumerate(squares):
+            square = shapely.geometry.Polygon([[min_x, min_y], [max_x, min_y], [max_x, max_y], [min_x, max_y]])
+            ax.add_patch(descartes.PolygonPatch(square, fc=cmap[i], ec='white', alpha=0.8, zorder=4))
+        ax.axis('image')
+        # Remove extraneous plotting elements.
+        ax.grid(b=False)
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        ax.patch.set_visible(False)
+        plt.show()
+        # TODO: Optimize performance.
+        # TODO: Implement a lower cutoff?
+        # TODO: Figure out why mplleaflet doesn't integrate with this.
+        # TODO: Add color key.
+        # TODO: Add geometries option.
