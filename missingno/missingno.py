@@ -476,13 +476,14 @@ def _calculate_geographic_nullity(geo_group, x_col, y_col):
     """
     Helper method which calculates the nullity of a DataFrame. Factored out of and used within `geoplot`.
     """
+    # Aggregate by point and fetch a list of non-null coordinate pairs, which is returned.
     point_groups = geo_group.groupby([x_col, y_col])
+    points = [point for point in point_groups.groups.keys() if pd.notnull(point[0]) and pd.notnull(point[1])]
     # Calculate nullities by location, then take their average within the overall feature.
-    counts = point_groups.count().apply(lambda srs: srs.sum(), axis='columns')
-    entries = point_groups.apply(len)
+    counts = np.sum(point_groups.count().values, axis=1)
+    entries = point_groups.size()
     width = len(geo_group.columns)
     # Remove empty (NaN, NaN) points.
-    points = [point for point in counts.index.values if pd.notnull(point[0]) and pd.notnull(point[1])]
     if len(entries) > 0:  # explicit check to avoid a Runtime Warning
         geographic_nullity = np.average(1 - counts / width / entries)
         return points, geographic_nullity
@@ -490,7 +491,8 @@ def _calculate_geographic_nullity(geo_group, x_col, y_col):
         return points, np.nan
 
 
-def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff=100):
+def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff=None,
+            width_ratios=(75, 1), figsize=(25, 10), colorbar=True):
     """
     Generates a geographical data nullity heatmap, which shows the distribution of missing data across geographic
     regions. The precise output depends on the inputs provided. In increasing order of usefulness:
@@ -545,10 +547,24 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
     else:
         raise IndexError("x AND y OR coordinates parameters expected.")
 
+    # Set the cutoff variable.
+    if cutoff is None: cutoff = np.min([50, 0.05 * len(df)])
+
+    fig = plt.figure(figsize=figsize)
+    if colorbar:
+        gs = gridspec.GridSpec(1, 2, width_ratios=width_ratios)
+        gs.update(wspace=0.08)
+        print(gs)
+        print(gs[1])
+        ax1 = plt.subplot(gs[1])
+    else:
+        gs = gridspec.GridSpec(1, 1)
+    ax0 = plt.subplot(gs[0])
+
     # In case we're given something to categorize by, use that.
     if by:
-        # This loop calculates and stores geographic feature averages and their convex hulls.
         nullities = dict()
+        # This loop calculates and stores geographic feature averages and their polygons.
         for identifier, geo_group in df.groupby(by):  # ex. ('BRONX', <pd.DataFrame with 10511 objects>)
             # A single observation in the group will produce a `Point` hull, while two observations in the group
             # will produce a `LineString` hull. Neither of these is desired, nor accepted by `PatchCollection`
@@ -584,24 +600,23 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
                     polygons = shapely.ops.cascaded_union([p for p in geometry])
                 else:  # shapely.geometry.Polygon
                     polygons = [geom]
-                nullities[identifier] = {'nullity': geographic_nullity, 'shape': polygons}
+                nullities[identifier] = {'nullity': geographic_nullity, 'shapes': polygons}
 
         # Prepare a colormap.
-        nullity_avgs = [nullities[key]['nullity'] for key in nullities.keys()]
-        cmap = matplotlib.cm.RdBu(plt.Normalize(0, 1)(nullity_avgs))
+        nullity_avgs = np.array([nullities[key]['nullity'] for key in nullities.keys()])
+        nullity_avg_deltas = nullity_avgs - np.average(nullity_avgs)
+        cmap = matplotlib.cm.rainbow(plt.Normalize(-1, 1)(nullity_avg_deltas))
 
         # Now we draw.
-        fig = plt.figure(figsize=(25, 10))
-        ax = fig.add_subplot(111)
-        for i, polygons in enumerate([(nullities[key]['shape']) for key in nullities.keys()]):
+        for i, polygons in enumerate([(nullities[key]['shapes']) for key in nullities.keys()]):
             for polygon in polygons:
-                ax.add_patch(descartes.PolygonPatch(polygon, fc=cmap[i], ec='white', alpha=0.8, zorder=4))
-        ax.axis('image')
+                ax0.add_patch(descartes.PolygonPatch(polygon, fc=cmap[i], ec='white', alpha=1, zorder=4))
+        ax0.axis('image')
         # Remove extraneous plotting elements.
-        ax.grid(b=False)
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
-        ax.patch.set_visible(False)
+        ax0.grid(b=False)
+        ax0.get_xaxis().set_visible(False)
+        ax0.get_yaxis().set_visible(False)
+        ax0.patch.set_visible(False)
         plt.show()
 
     # In case we aren't given something to categorize by, we choose a spatial representation that's reasonably
@@ -618,9 +633,12 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
 
         # Recursive quadtree. This subroutine, when, builds a dictionary of squares, stored by tuples keyed with
         # (min_x, max_x, min_y, max_y), whose values are the nullity of squares containing less than 100 observations.
-        def squarify(_min_x, _max_x, _min_y, _max_y):
-            points_inside = df[df[[x_col, y_col]]\
-                .apply(lambda srs: (_min_x < srs[x_col] < _max_x) and (_min_y < srs[y_col] < _max_y), axis='columns')]
+        def squarify(_min_x, _max_x, _min_y, _max_y, df):
+            arr = df[[x_col, y_col]].values
+            points_inside = df[(_min_x < arr[:,0]) &
+                               (arr[:,0] < _max_x) &
+                               (_min_y < arr[:,1]) &
+                               (arr[:,1] < _max_y)]
             if len(points_inside) < cutoff:
                 # The following subroutine groups `geo_group` by `x_col` and `y_col`, and calculates and returns
                 # a list of points in the group (`points`) as well as its overall nullity (`geographic_nullity`). The
@@ -629,40 +647,46 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
                 squares.append(((_min_x, _max_x,_min_y, _max_y), square_nullity))
             else:
                 _mid_x, _mid_y = (_min_x + _max_x) / 2, (_min_y + _max_y) / 2
-                squarify(_min_x, _mid_x, _mid_y, _max_y)
-                squarify(_min_x, _mid_x, _min_y, _mid_y)
-                squarify(_mid_x, _max_x, _mid_y, _max_y)
-                squarify(_mid_x, _max_x, _min_y, _mid_y)
+                squarify(_min_x, _mid_x, _mid_y, _max_y, points_inside)
+                squarify(_min_x, _mid_x, _min_y, _mid_y, points_inside)
+                squarify(_mid_x, _max_x, _mid_y, _max_y, points_inside)
+                squarify(_mid_x, _max_x, _min_y, _mid_y, points_inside)
 
         # Populate the `squares` array, per the above.
-        squarify(min_x, max_x, min_y, max_y)
+        squarify(min_x, max_x, min_y, max_y, df)
 
         # Prepare a colormap.
-        cmap = matplotlib.cm.RdBu(plt.Normalize(0, 1)([nullity for _, nullity in squares]))
         # Many of the squares at the bottom of the quadtree will be inputted into the colormap as NaN values,
         # which matplotlib will map over as minimal values. We of course don't want that, so we pull the bottom out
         # of it.
-        # cmap = [c if (not np.isclose(c, [0.40392157, 0, 0.12156863, 1]).all()) else [1, 1, 1, 1] for c in cmap]
-        cmap = [c if pd.notnull(squares[i][1]) else [1,1,1,1] for i, c in enumerate(cmap)]
+        cmap = matplotlib.cm.YlOrRd
+        colors = [cmap(n) if pd.notnull(n) else [1,1,1,1]
+                  for n in plt.Normalize(0, 1)([nullity for _, nullity in squares])]
+
         # Now we draw.
-        fig = plt.figure(figsize=(25, 10))
-        ax = fig.add_subplot(111)
-        # Note: we're implicitly relying on the order of the dictionary keys not changing in between the execution of
-        # the two lines above. That is, we expect the order of the keys returned while we are computing a colormap to
-        #  be the same as the order returned below, two LOC later, when applying that colormap. This is not a
-        # fashionable assumption to be making in modern Python, but it remains technically correct. If this behavior
-        # changes, then the implementation used here will have to be updated as well.
         for i, ((min_x, max_x, min_y, max_y), _) in enumerate(squares):
             square = shapely.geometry.Polygon([[min_x, min_y], [max_x, min_y], [max_x, max_y], [min_x, max_y]])
-            ax.add_patch(descartes.PolygonPatch(square, fc=cmap[i], ec='white', alpha=0.8, zorder=4))
-        ax.axis('image')
+            ax0.add_patch(descartes.PolygonPatch(square, fc=colors[i], ec='white', alpha=1, zorder=4))
+        ax0.axis('image')
+
         # Remove extraneous plotting elements.
-        ax.grid(b=False)
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
-        ax.patch.set_visible(False)
+        ax0.grid(b=False)
+        ax0.get_xaxis().set_visible(False)
+        ax0.get_yaxis().set_visible(False)
+        ax0.patch.set_visible(False)
+
+        # Style the colorbar, if it's present.
+        if colorbar:
+            pass
+
+        # Add colorbar. Creating colorbars is surprisingly difficult for patch collections, especially in our case
+        # because we overwrite the colormap in certain cases. It doesn't appear to be possible to automatically
+        # generate a oolorbar which doesn't also force exactly the given colormap onto the map (and raise an ugly
+        # RuntimeWarning when it encounters nulls, which is highly likely). Given all of this, it's easiest to
+        # manually create our own colorbar and add it to the plot.
+        matplotlib.colorbar.ColorbarBase(ax1, cmap=cmap, orientation='vertical',
+                                         norm=matplotlib.colors.Normalize(vmin=0, vmax=1))
+        # Display.
         plt.show()
-        # TODO: Optimize performance.
-        # TODO: Implement a lower cutoff?
         # TODO: Figure out why mplleaflet doesn't integrate with this.
         # TODO: Add color key.
