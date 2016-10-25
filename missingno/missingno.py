@@ -115,21 +115,20 @@ def nullity_filter(df, filter=None, p=0, n=0):
 def matrix(df,
            filter=None, n=0, p=0, sort=None,
            figsize=(25, 10), width_ratios=(15, 1), color=(0.25, 0.25, 0.25),
-           fontsize=16, labels=None, sparkline=True, inline=False
-           ):
+           fontsize=16, labels=None, sparkline=True, inline=True, flip=None,
+           freq=None):
     """
     Presents a `matplotlib` matrix visualization of the nullity of the given DataFrame.
-    
+
     Note that for the default `figsize` 250 is a soft display limit: specifying a number of records greater than
     approximately this value will cause certain records to show up in the sparkline but not in the matrix, which can
     be confusing.
-    
-    
+
+
     The default vertical display will fit up to 50 columns. If more than 50 columns are specified and the labels
     parameter is left unspecified the visualization will automatically drop the labels as they will not be very
     readable. You can override this behavior using `labels=True` and your own `fontsize` parameter.
 
-    
     :param df: The DataFrame whose completeness is being nullity matrix mapped.
     :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default). See
     `nullity_filter()` for more information.
@@ -149,10 +148,15 @@ def matrix(df,
     :param width_ratios: The ratio of the width of the matrix to the width of the sparkline. Defaults to `(15,
     1)`. Does nothing if `sparkline=False`.
     :param color: The color of the filled columns. Default is a medium dark gray: the RGB multiple `(0.25, 0.25, 0.25)`.
-    :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
-    return its figure.
-    :return: If `inline` is True, the underlying `matplotlib.figure` object. Else, nothing.
+    :param flip: The default matrix orientation is top-down, with column on the vertical and rows on the horizontal---
+    just like a table. However, for large displays (> 50 by default) display in this format becomes uncomfortable, so
+    the display gets flipped. This parameter is specified to be True if there are more than 50 columns and False
+    otherwise.
+    :return: Returns the underlying `matplotlib.figure` object.
     """
+
+    if freq: import pandas as pd
+
     # Apply filters and sorts.
     df = nullity_filter(df, filter=filter, n=n, p=p)
     df = nullity_sort(df, sort=sort)
@@ -162,14 +166,14 @@ def matrix(df,
 
     # z is the color-mask array.
     z = df.notnull().values
-    
+
     # g is a NxNx3 matrix
     g = np.zeros((height, width, 3))
 
     # Apply the z color-mask to set the RGB of each pixel.
     g[z < 0.5] = [1, 1, 1]
     g[z > 0.5] = color
-        
+
     # Set up the matplotlib grid layout.
     # If the sparkline is removed the layout is a unary subplot.
     # If the sparkline is included the layout is a left-right subplot.
@@ -208,9 +212,42 @@ def matrix(df,
     else:
         ax0.set_xticks([])
 
-    # Set up the two top-bottom row ticks.
-    ax0.set_yticks([0, df.shape[0] - 1])
-    ax0.set_yticklabels([1, df.shape[0]], fontsize=20, rotation=0)
+    # Adds Timestamps ticks if freq is not None,
+    # else sets up the two top-bottom row ticks.
+    if freq:
+        ts_list = []
+
+        if type(df.index) == pd.tseries.period.PeriodIndex:
+            ts_array = pd.date_range(df.index.to_timestamp().date[0],
+                                     df.index.to_timestamp().date[-1],
+                                     freq=freq).values
+
+            ts_ticks = pd.date_range(df.index.to_timestamp().date[0],
+                                     df.index.to_timestamp().date[-1],
+                                     freq=freq).map(lambda t:
+                                                    t.strftime('%Y-%m-%d'))
+
+        elif type(df.index) == pd.tseries.index.DatetimeIndex:
+            ts_array = pd.date_range(df.index.date[0], df.index.date[-1],
+                                     freq=freq).values
+
+            ts_ticks = pd.date_range(df.index.date[0], df.index.date[-1],
+                                     freq=freq).map(lambda t:
+                                                    t.strftime('%Y-%m-%d'))
+        else:
+            print('Dataframe index must be PeriodIndex or DatetimeIndex')
+        try:
+            for value in ts_array:
+                ts_list.append(df.index.get_loc(value))
+        except KeyError:
+            return print("Could not divide time index into desired Frequency")
+
+        ax0.set_yticks(ts_list)
+        ax0.set_yticklabels(ts_ticks, fontsize=20, rotation=0)
+    else:
+        ax0.set_yticks([0, df.shape[0] - 1])
+        ax0.set_yticklabels([1, df.shape[0]], fontsize=20, rotation=0)
+
     # Create the inter-column vertical grid.
     in_between_point = [x + 0.5 for x in range(0, width - 1)]
     for in_between_point in in_between_point:
