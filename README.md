@@ -43,6 +43,17 @@ or become unreadable, and by default large displays omit them.
 
 [large_matrix]: http://i.imgur.com/yITFVju.png
 
+If you are working with time-series data, you can [specify a periodicity](http://pandas.pydata.org/pandas-docs/stable/timeseries.html#timeseries-offset-aliases)
+using the `freq` keyword parameter:
+
+    >>> null_pattern = (np.random.random(1000).reshape((50, 20)) > 0.5).astype(bool)
+    >>> null_pattern = pd.DataFrame(null_pattern).replace({False: None})
+    >>> msno.matrix(null_pattern.set_index(pd.period_range('1/1/2011', '2/1/2015', freq='M')) , freq='BQ')
+
+![alt text][ts_matrix]
+
+[ts_matrix]: https://cloud.githubusercontent.com/assets/20803912/19692749/470137bc-9a96-11e6-8708-e4d70b91c597.png
+
 <!--
 You can override this behavior by specifying `labels=True`. In that case you will also want to set your own
 `fontsize` value. These optional parameters are among those covered in more detail in the
@@ -235,6 +246,8 @@ the methods omit plotting and return their visualizations instead.
 
 `matrix` also provides:
 * `sparkline`: Set this to `False` to not draw the sparkline.
+* `freq`: If you are working with timeseries data (a `pandas` `DataFrame` with a `PeriodIndex` or `DatetimeIndex`)
+you can specify and display a [choice of offset](http://pandas.pydata.org/pandas-docs/stable/timeseries.html#timeseries-offset-aliases).
 * `width_ratios`: The ratio of the width of the matrix to the width of the sparkline. Defaults to `(15,
     1)`. Does nothing if `sparkline=False`.
 * `color`: The color of the filled columns. Defaults to `(0.25, 0.25, 0.25)`.
