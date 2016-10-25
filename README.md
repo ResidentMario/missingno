@@ -115,6 +115,37 @@ As with `matrix`, only up to 50 labeled columns will comfortably display in this
 [large-dendrogram]: http://i.imgur.com/HDa06O9.png
 
 
+### Geoplot
+
+One kind of pattern that's particularly difficult to check, where it appears, is geographic distribution. The geoplot
+ makes this easy:
+
+    >>> msno.geoplot(collisions.sample(100000), x='LONGITUDE', y='LATITUDE')
+
+![alt-text][large-geoplot]
+
+[large-geoplot]: http://i.imgur.com/4dtGhig.png
+
+If no geographical context can be provided, `geoplot` can be used to compute a
+[quadtree](https://en.wikipedia.org/wiki/Quadtree) nullity distribution, as above, which splits the dataset into
+statistically significant chunks and colorizes them based on the average nullity of data points within them. In this
+case (fortunately for our analysis, but unfortunately for the purposes of presentation) it appears that our dataset's
+data nullity is unaffected by geography.
+
+A quadtree analysis works remarkably well in most cases, but will not always be what you want. If you can specify a
+geographic grouping within the dataset (using the `by` keyword argument), you can plot your data as a set of
+minimum-enclosure [convex hulls](https://en.wikipedia.org/wiki/Convex_hull) instead (the following example also
+demonstrates adding a histogram to the display, using the `hist=True` argument):
+
+    >>> msno.geoplot(collisions.sample(100000), x='LONGITUDE', y='LATITUDE', by='ZIP CODE', hist=True)
+
+![alt-text][hull-geoplot]
+
+[hull-geoplot]: http://i.imgur.com/3kfKMJO.png
+
+The histogram, if enabled via `hist=True` as above, shows the distribution of sectors by the percentage of their
+fields which are incomplete.
+
 ### Sorting and filtering
 
 `missingno` also provides utility functions for filtering records in your dataset based on completion. These are

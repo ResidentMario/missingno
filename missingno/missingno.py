@@ -115,7 +115,7 @@ def nullity_filter(df, filter=None, p=0, n=0):
 def matrix(df,
            filter=None, n=0, p=0, sort=None,
            figsize=(25, 10), width_ratios=(15, 1), color=(0.25, 0.25, 0.25),
-           fontsize=16, labels=None, sparkline=True
+           fontsize=16, labels=None, sparkline=True, inline=False
            ):
     """
     Presents a `matplotlib` matrix visualization of the nullity of the given DataFrame.
@@ -574,7 +574,7 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
 
     # In case we're given something to categorize by, use that.
     if by:
-        nullities = dict()
+        nullity_dict = dict()
         # This loop calculates and stores geographic feature averages and their polygons.
         for identifier, geo_group in df.groupby(by):  # ex. ('BRONX', <pd.DataFrame with 10511 objects>)
             # A single observation in the group will produce a `Point` hull, while two observations in the group
@@ -596,11 +596,10 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
             # If no geometry is provided, calculate and store the hulls and averages.
             if geometry is None:
                     hull = shapely.geometry.MultiPoint(points).convex_hull
-                    nullities[identifier] = {'nullity': geographic_nullity, 'shapes': [hull]}
+                    nullity_dict[identifier] = {'nullity': geographic_nullity, 'shapes': [hull]}
 
             # If geometry is provided, use that instead.
             else:
-                print(identifier)
                 geom = geometry[identifier]
                 polygons = []
                 # Valid polygons are simple polygons (`shapely.geometry.Polygon`) and complex multi-piece polygons
@@ -611,32 +610,50 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
                     polygons = shapely.ops.cascaded_union([p for p in geometry])
                 else:  # shapely.geometry.Polygon
                     polygons = [geom]
-                nullities[identifier] = {'nullity': geographic_nullity, 'shapes': polygons}
+                nullity_dict[identifier] = {'nullity': geographic_nullity, 'shapes': polygons}
 
         # Prepare a colormap.
-        cmap = matplotlib.cm.YlOrRd(plt.Normalize(0, 1)([nullities[key]['nullity'] for key in nullities.keys()]))
-        print(cmap)
+        nullities = [nullity_dict[key]['nullity'] for key in nullity_dict.keys()]
+        colors = matplotlib.cm.YlOrRd(plt.Normalize(0, 1)(nullities))
 
         # Now we draw.
-        return [(nullities[key]['shapes']) for key in nullities.keys()], cmap
-        for i, polygons in enumerate([(nullities[key]['shapes']) for key in nullities.keys()]):
-            # ax.add_patch(descartes.PolygonPatch(shapely.geometry.Polygon([[0,0],[0,1],[1,1],[1,0]]),
-            #                                     fc=cmap[i], ec='white', alpha=0.8, zorder=4))
-            # break
+        for i, polygons in enumerate([(nullity_dict[key]['shapes']) for key in nullity_dict.keys()]):
             for polygon in polygons:
-                print(polygon)
-                print(descartes.PolygonPatch(polygon, fc=cmap[i], ec='white', alpha=0.8, zorder=4).get_path())
-                ax.add_patch(descartes.PolygonPatch(polygon, fc=cmap[i], ec='white', alpha=0.8, zorder=4))
+                ax.add_patch(descartes.PolygonPatch(polygon, fc=colors[i], ec='white', alpha=0.8, zorder=4))
+        ax.axis('equal')
 
         # Remove extraneous plotting elements.
         ax.grid(b=False)
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
         ax.patch.set_visible(False)
+
+        if hist:
+            # Add a histogram.
+            sns.set_style(None)
+            nonnan_nullities = [n for n in nullities if pd.notnull(n)]
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("bottom", size="25%", pad=0.00)
+            sns.distplot(pd.Series(nonnan_nullities), ax=cax, color=list(np.average(colors, axis=0)))
+
+            cax.grid(b=False)
+            # cax.get_xaxis().set_visible(False)
+            cax.get_yaxis().set_visible(False)
+            cax.patch.set_visible(False)
+            cax.xaxis.set_ticks_position('none')
+            cax.yaxis.set_ticks_position('none')
+            cax.spines['top'].set_visible(False)
+            cax.spines['right'].set_visible(False)
+            cax.spines['bottom'].set_visible(False)
+            cax.spines['left'].set_visible(False)
+            cax.patch.set_visible(False)
+            cax.tick_params(labelsize=fontsize)
+
+        # Display.
         plt.show()
 
     # In case we aren't given something to categorize by, we choose a spatial representation that's reasonably
-    # efficient and informative: quadtree squares.
+    # efficient and informative: quadtree rectangles.
     # Note: SVD could perhaps be applied to the axes to discover point orientation and realign the grid to match
     # that, but I'm uncertain that this computationally acceptable and, in the case of comparisons, even a good
     # design choice. Perhaps this could be implemented at a later date.
@@ -645,7 +662,7 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
         min_x, max_x = df[x_col].min(), df[x_col].max()
         min_y, max_y = df[y_col].min(), df[y_col].max()
 
-        squares = []
+        rectangles = []
 
         # Recursive quadtree. This subroutine, when, builds a dictionary of squares, stored by tuples keyed with
         # (min_x, max_x, min_y, max_y), whose values are the nullity of squares containing less than 100 observations.
@@ -660,7 +677,7 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
                 # a list of points in the group (`points`) as well as its overall nullity (`geographic_nullity`). The
                 # first of these calculations is ignored.
                 _, square_nullity = _calculate_geographic_nullity(points_inside, x_col, y_col)
-                squares.append(((_min_x, _max_x,_min_y, _max_y), square_nullity))
+                rectangles.append(((_min_x, _max_x,_min_y, _max_y), square_nullity))
             else:
                 _mid_x, _mid_y = (_min_x + _max_x) / 2, (_min_y + _max_y) / 2
                 squarify(_min_x, _mid_x, _mid_y, _max_y, points_inside)
@@ -675,13 +692,13 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
         # Many of the squares at the bottom of the quadtree will be inputted into the colormap as NaN values,
         # which matplotlib will map over as minimal values. We of course don't want that, so we pull the bottom out
         # of it.
-        nullities = [nullity for _, nullity in squares]
+        nullities = [nullity for _, nullity in rectangles]
         cmap = matplotlib.cm.YlOrRd
         colors = [cmap(n) if pd.notnull(n) else [1,1,1,1]
                   for n in plt.Normalize(0, 1)(nullities)]
 
         # Now we draw.
-        for i, ((min_x, max_x, min_y, max_y), _) in enumerate(squares):
+        for i, ((min_x, max_x, min_y, max_y), _) in enumerate(rectangles):
             square = shapely.geometry.Polygon([[min_x, min_y], [max_x, min_y], [max_x, max_y], [min_x, max_y]])
             ax.add_patch(descartes.PolygonPatch(square, fc=colors[i], ec='white', alpha=1, zorder=4))
         ax.axis('equal')
@@ -720,18 +737,6 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
             cax.spines['left'].set_visible(False)
             cax.patch.set_visible(False)
             cax.tick_params(labelsize=fontsize)
-
-        # if legend:
-        #     nullities = [nullity for _, nullity in squares if pd.notnull(nullity)]
-        #     n0, n25, n50, n75, n100 =
-        #     # Disabled for now: hard to position properly. An earlier attempt using a colorbar achieved nothing more
-        #     # than lighting my patience on fire, so this seems to be a difficult thing to get right...
-        #     ax.text(0.8, 0.2, 'Min: {:0.2f}\nIQR: {:0.2f}\nMax: {:0.2f}'.format(minn, avgn, maxn),
-        #             horizontalalignment='right',
-        #             verticalalignment='top',
-        #             transform=ax.transAxes,
-        #             fontsize=16,
-        #             zorder=10)
 
         # Display.
         if inline:
