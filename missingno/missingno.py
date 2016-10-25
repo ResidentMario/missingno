@@ -6,6 +6,7 @@ import seaborn as sns
 import pandas as pd
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
+
 def _ascending_sort(df):
     """
     Helper method for sorting.
@@ -103,7 +104,7 @@ def nullity_filter(df, filter=None, p=0, n=0):
 def matrix(df,
            filter=None, n=0, p=0, sort=None,
            figsize=(25, 10), width_ratios=(15, 1), color=(0.25, 0.25, 0.25),
-           fontsize=16, labels=None, sparkline=True, inline=True, flip=None,
+           fontsize=16, labels=None, sparkline=True, inline=True,
            freq=None):
     """
     Presents a `matplotlib` matrix visualization of the nullity of the given DataFrame.
@@ -136,15 +137,8 @@ def matrix(df,
     :param width_ratios: The ratio of the width of the matrix to the width of the sparkline. Defaults to `(15,
     1)`. Does nothing if `sparkline=False`.
     :param color: The color of the filled columns. Default is a medium dark gray: the RGB multiple `(0.25, 0.25, 0.25)`.
-    :param flip: The default matrix orientation is top-down, with column on the vertical and rows on the horizontal---
-    just like a table. However, for large displays (> 50 by default) display in this format becomes uncomfortable, so
-    the display gets flipped. This parameter is specified to be True if there are more than 50 columns and False
-    otherwise.
-    :return: Returns the underlying `matplotlib.figure` object.
+    :return: If `inline` is True, the underlying `matplotlib.figure` object. Else, nothing.
     """
-
-
-    if freq: import pandas as pd
 
     # Apply filters and sorts.
     df = nullity_filter(df, filter=filter, n=n, p=p)
@@ -174,11 +168,9 @@ def matrix(df,
     else:
         gs = gridspec.GridSpec(1, 1)
     ax0 = plt.subplot(gs[0])
+
     # Create the nullity plot.
     ax0.imshow(g, interpolation='none')
-
-    # Set fontsize.
-    # fontsize = _set_font_size(fig, df, fontsize)
 
     # Remove extraneous default visual elements.
     ax0.set_aspect('auto')
@@ -194,7 +186,7 @@ def matrix(df,
     # Set up and rotate the column ticks.
     # The labels argument is set to None by default. If the user specifies it in the argument,
     # respect that specification. Otherwise display for <= 50 columns and do not display for > 50.
-    if labels or (labels == None and len(df.columns) <= 50):
+    if labels or (labels is None and len(df.columns) <= 50):
         ha = 'left'
         ax0.set_xticks(list(range(0, width)))
         ax0.set_xticklabels(list(df.columns), rotation=45, ha=ha, fontsize=fontsize)
@@ -306,6 +298,80 @@ def matrix(df,
         ax1.xaxis.set_ticks_position('none')
 
     # Plot if inline, return the figure if not.
+    if inline:
+        plt.show()
+    else:
+        return plt
+
+
+def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color=(0.25, 0.25, 0.25), inline=True,
+        filter=None, n=0, p=0, sort=None):
+    """
+    Plots a bar chart of data nullities by column.
+
+    :param df: The DataFrame whose completeness is being nullity matrix mapped.
+    :param log: Whether or not to display a logorithmic plot. Defaults to False (linear).
+    :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default). See
+    `nullity_filter()` for more information.
+    :param n: The cap on the number of columns to include in the filtered DataFrame. See  `nullity_filter()` for
+    more information.
+    :param p: The cap on the percentage fill of the columns in the filtered DataFrame. See  `nullity_filter()` for
+    more information.
+    :param sort: The sort to apply to the heatmap. Should be one of "ascending", "descending", or None. See
+    `nullity_sort()` for more information.
+    :param figsize: The size of the figure to display. This is a `matplotlib` parameter. Defaults to (24,
+    10).
+    :param fontsize: The figure's font size. This default to 16.
+    :param labels: Whether or not to display the column names. Would need to be turned off on particularly large
+    displays. Defaults to True.
+    :param color: The color of the filled columns. Default is a medium dark gray: the RGB multiple `(0.25, 0.25, 0.25)`.
+    :return: If `inline` is True, the underlying `matplotlib.figure` object. Else, nothing.
+    """
+    # Get counts.
+    nullity_counts = df.isnull().sum()
+
+    # Apply filters and sorts.
+    df = nullity_filter(df, filter=filter, n=n, p=p)
+    df = nullity_sort(df, sort=sort)
+
+    # Create the basic plot.
+    fig = plt.figure(figsize=figsize)
+    (nullity_counts / len(df)).plot(kind='bar', figsize=figsize, fontsize=fontsize, color=color, log=log)
+
+    # Get current axis.
+    ax1 = plt.gca()
+
+    # Start appending elements, starting with a modified bottom x axis.
+    if labels or (labels is None and len(df.columns) <= 50):
+        pos = ax1.get_xticks()
+        ax1.set_xticklabels(ax1.get_xticklabels(), rotation=45, ha='right', fontsize=fontsize)
+
+        # Create the numerical ticks.
+        ax2 = ax1.twinx()
+        if not log:
+            # Simple if the plot is ordinary.
+            ax2.set_yticks(ax1.get_yticks())
+            ax2.set_yticklabels([int(n*len(df)) for n in ax1.get_yticks()], fontsize=fontsize)
+        else:
+            # For some reason when a logarithmic plot is specified `ax1` always contains two more ticks than actually
+            # appears in the plot. For example, if we do `msno.histogram(collisions.sample(500), log=True)` the contents
+            # of the naive `ax1.get_yticks()` is [1.00000000e-03, 1.00000000e-02, 1.00000000e-01, 1.00000000e+00,
+            # 1.00000000e+01]. The fix is to ignore the first and last entries.
+            #
+            # Also note that when a log scale is used, we have to make it match the `ax1` layout ourselves.
+            ax2.set_yscale('log')
+            ax2.set_ylim(ax1.get_ylim())
+            ax2.set_yticks(ax1.get_yticks()[1:-1])
+            ax2.set_yticklabels([int(n*len(df)) for n in ax1.get_yticks()[1:-1]], fontsize=fontsize)
+
+    # Create the third axis, which displays columnar totals above the rest of the plot.
+    ax3 = ax1.twiny()
+    ax3.set_xticks(pos)
+    ax3.set_xlim(ax1.get_xlim())
+    ax3.set_xticklabels(nullity_counts.values, fontsize=fontsize, rotation=45, ha='left')
+    ax3.grid(False)
+
+    # Display.
     if inline:
         plt.show()
     else:
@@ -444,12 +510,6 @@ def dendrogram(df, method='average',
     # Apply filters and sorts.
     df = nullity_filter(df, filter=filter, n=n, p=p)
     df = nullity_sort(df, sort=sort)
-
-    # Set font size.
-    # if orientation == 'top' or orientation == 'bottom':
-    #     fontsize = _set_font_size(fig, df, fontsize)
-    # else:
-    #     fontsize = 20
 
     # Link the hierarchical output matrix.
     x = np.transpose(df.isnull().astype(int).values)
@@ -740,5 +800,9 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
         cax.tick_params(labelsize=fontsize)
 
     # Display.
-    plt.show()
+    # Display.
+    if inline:
+        plt.show()
+    else:
+        return fig
 
