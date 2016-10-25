@@ -666,30 +666,6 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
         ax.get_yaxis().set_visible(False)
         ax.patch.set_visible(False)
 
-        if histogram:
-            # Add a histogram.
-            sns.set_style(None)
-            nonnan_nullities = [n for n in nullities if pd.notnull(n)]
-            divider = make_axes_locatable(ax)
-            cax = divider.append_axes("bottom", size="25%", pad=0.00)
-            sns.distplot(pd.Series(nonnan_nullities), ax=cax, color=list(np.average(colors, axis=0)))
-
-            cax.grid(b=False)
-            # cax.get_xaxis().set_visible(False)
-            cax.get_yaxis().set_visible(False)
-            cax.patch.set_visible(False)
-            cax.xaxis.set_ticks_position('none')
-            cax.yaxis.set_ticks_position('none')
-            cax.spines['top'].set_visible(False)
-            cax.spines['right'].set_visible(False)
-            cax.spines['bottom'].set_visible(False)
-            cax.spines['left'].set_visible(False)
-            cax.patch.set_visible(False)
-            cax.tick_params(labelsize=fontsize)
-
-        # Display.
-        plt.show()
-
     # In case we aren't given something to categorize by, we choose a spatial representation that's reasonably
     # efficient and informative: quadtree rectangles.
     # Note: SVD could perhaps be applied to the axes to discover point orientation and realign the grid to match
@@ -754,30 +730,26 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
         ax.spines['left'].set_visible(False)
         ax.patch.set_visible(False)
 
-        if histogram:
-            # Add a histogram.
-            sns.set_style(None)
-            nonnan_nullities = [n for n in nullities if pd.notnull(n)]
-            # pd.Series(nonnan_nullities).plot(kind='hist')
-            divider = make_axes_locatable(ax)
-            cax = divider.append_axes("bottom", size="25%", pad=0.00)
-            sns.distplot(pd.Series(nonnan_nullities), ax=cax, color=list(np.average(colors, axis=0)))
+    if histogram:
+        # Add a histogram.
+        sns.set_style(None)
+        nonnan_nullities = [n for n in nullities if pd.notnull(n)]
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("bottom", size="25%", pad=0.00)
+        sns.distplot(pd.Series(nonnan_nullities), ax=cax, color=list(np.average(colors, axis=0)))
 
-            cax.grid(b=False)
-            # cax.get_xaxis().set_visible(False)
-            cax.get_yaxis().set_visible(False)
-            cax.patch.set_visible(False)
-            cax.xaxis.set_ticks_position('none')
-            cax.yaxis.set_ticks_position('none')
-            cax.spines['top'].set_visible(False)
-            cax.spines['right'].set_visible(False)
-            cax.spines['bottom'].set_visible(False)
-            cax.spines['left'].set_visible(False)
-            cax.patch.set_visible(False)
-            cax.tick_params(labelsize=fontsize)
+        cax.grid(b=False)
+        # cax.get_xaxis().set_visible(False)
+        cax.get_yaxis().set_visible(False)
+        cax.patch.set_visible(False)
+        cax.xaxis.set_ticks_position('none')
+        cax.yaxis.set_ticks_position('none')
+        cax.spines['top'].set_visible(False)
+        cax.spines['right'].set_visible(False)
+        cax.spines['bottom'].set_visible(False)
+        cax.spines['left'].set_visible(False)
+        cax.patch.set_visible(False)
+        cax.tick_params(labelsize=fontsize)
 
-        # Display.
-        if inline:
-            plt.show()
-        else:
-            return fig
+    # Display.
+    plt.show()
