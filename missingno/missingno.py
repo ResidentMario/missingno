@@ -155,6 +155,7 @@ def matrix(df,
     :return: Returns the underlying `matplotlib.figure` object.
     """
 
+
     if freq: import pandas as pd
 
     # Apply filters and sorts.
@@ -531,7 +532,7 @@ def _calculate_geographic_nullity(geo_group, x_col, y_col):
         return points, np.nan
 
 
-def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff=None, hist=False,
+def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff=None, histogram=False,
             figsize=(25, 10), fontsize=8, inline=True):
     """
     Generates a geographical data nullity heatmap, which shows the distribution of missing data across geographic
@@ -561,7 +562,7 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
     each square. If not provided, set to 50 or 5% of the total size of the dataset, whichever is smaller. If `by` is
     specified this parameter is ignored.
     :param figsize: The size of the figure to display. This is a `matplotlib` parameter which defaults to (25, 10).
-    :param hist: Whether or not to plot a histogram of data distributions below the map. Defaults to False.
+    :param histogram: Whether or not to plot a histogram of data distributions below the map. Defaults to False.
     :param fontsize: If `hist` is specified, this parameter specifies the size of the tick labels. Ignored if `hist`
     is not specified. Defaults to 8.
     :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
@@ -665,7 +666,7 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
         ax.get_yaxis().set_visible(False)
         ax.patch.set_visible(False)
 
-        if hist:
+        if histogram:
             # Add a histogram.
             sns.set_style(None)
             nonnan_nullities = [n for n in nullities if pd.notnull(n)]
@@ -753,7 +754,7 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
         ax.spines['left'].set_visible(False)
         ax.patch.set_visible(False)
 
-        if hist:
+        if histogram:
             # Add a histogram.
             sns.set_style(None)
             nonnan_nullities = [n for n in nullities if pd.notnull(n)]
