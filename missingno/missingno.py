@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.cluster import hierarchy
 import seaborn as sns
 import pandas as pd
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 def _ascending_sort(df):
@@ -114,7 +115,7 @@ def nullity_filter(df, filter=None, p=0, n=0):
 def matrix(df,
            filter=None, n=0, p=0, sort=None,
            figsize=(25, 10), width_ratios=(15, 1), color=(0.25, 0.25, 0.25),
-           fontsize=16, labels=None, sparkline=True, inline=True, flip=None
+           fontsize=16, labels=None, sparkline=True
            ):
     """
     Presents a `matplotlib` matrix visualization of the nullity of the given DataFrame.
@@ -148,11 +149,9 @@ def matrix(df,
     :param width_ratios: The ratio of the width of the matrix to the width of the sparkline. Defaults to `(15,
     1)`. Does nothing if `sparkline=False`.
     :param color: The color of the filled columns. Default is a medium dark gray: the RGB multiple `(0.25, 0.25, 0.25)`.
-    :param flip: The default matrix orientation is top-down, with column on the vertical and rows on the horizontal---
-    just like a table. However, for large displays (> 50 by default) display in this format becomes uncomfortable, so
-    the display gets flipped. This parameter is specified to be True if there are more than 50 columns and False
-    otherwise.
-    :return: Returns the underlying `matplotlib.figure` object.
+    :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
+    return its figure.
+    :return: If `inline` is True, the underlying `matplotlib.figure` object. Else, nothing.
     """
     # Apply filters and sorts.
     df = nullity_filter(df, filter=filter, n=n, p=p)
@@ -310,7 +309,9 @@ def heatmap(df, inline=True,
     :param fontsize: The figure's font size.
     :param labels: Whether or not to label each matrix entry with its correlation (default is True).
     :param cmap: What `matplotlib` colormap to use. Defaults to `RdBu`.
-    :return: Returns the underlying `matplotlib.figure` object.
+    :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
+    return its figure.
+    :return: If `inline` is True, the underlying `matplotlib.figure` object. Else, nothing.
     """
     # Apply filters and sorts.
     df = nullity_filter(df, filter=filter, n=n, p=p)
@@ -398,7 +399,9 @@ def dendrogram(df, method='average',
     :param fontsize: The figure's font size.
     :param orientation: The way the dendrogram is oriented. Defaults to top-down if there are less than or equal to 50
     columns and left-right if there are more.
-    :return: Returns the underlying `matplotlib.figure` object.
+    :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
+    return its figure.
+    :return: If `inline` is True, the underlying `matplotlib.figure` object. Else, nothing.
     """
     # Figure out the appropriate figsize.
     if not figsize:
@@ -491,8 +494,8 @@ def _calculate_geographic_nullity(geo_group, x_col, y_col):
         return points, np.nan
 
 
-def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff=None,
-            width_ratios=(100, 1), figsize=(25, 10), colorbar=True):
+def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff=None, hist=False,
+            figsize=(25, 10), fontsize=8, inline=True):
     """
     Generates a geographical data nullity heatmap, which shows the distribution of missing data across geographic
     regions. The precise output depends on the inputs provided. In increasing order of usefulness:
@@ -505,13 +508,28 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
     *   If geographical context is provided *and* a separate geometry is provided, a heatmap is generated for each
         point group within this geograpby instead.
 
-    :param df:
-    :param x:
-    :param y:
-    :param coordinates:
-    :param by:
-    :param cutoff:
-    :return:
+    :param df: The DataFrame whose completeness is being mapped.
+    :param x: The x variable: probably a coordinate (longitude), possibly some other floating point value. May be a
+    string (pointing to a column of df) or an iterable.
+    :param y: The y variable: probably a coordinate (latitude), possibly some other floating point value. May be a
+    string (pointing to a column of df) or an iterable.
+    :param coordinates: A coordinate tuple iterable, or column thereof in the given DataFrame. One of x AND y OR
+    coordinates must be specified, but not both.
+    :param by: If you would like to aggregate your geometry by some geospatial attribute of the underlying DataFrame,
+    name that column here.
+    :param geometry: If you would like to provide your own geometries for your aggregation, instead of relying on
+    (functional, but not pretty) convex hulls, provide them here. This parameter is expected to be a dict or Series
+    of `shapely.Polygon` or `shapely.MultiPolygon` objects. It's ignored if `by` is not specified.
+    :param cutoff: If no aggregation is specified, this parameter sets the minimum number of observations to include in
+    each square. If not provided, set to 50 or 5% of the total size of the dataset, whichever is smaller. If `by` is
+    specified this parameter is ignored.
+    :param figsize: The size of the figure to display. This is a `matplotlib` parameter which defaults to (25, 10).
+    :param hist: Whether or not to plot a histogram of data distributions below the map. Defaults to False.
+    :param fontsize: If `hist` is specified, this parameter specifies the size of the tick labels. Ignored if `hist`
+    is not specified. Defaults to 8.
+    :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
+    return its figure.
+    :return: If `inline` is True, the underlying `matplotlib.figure` object. Else, nothing.
     """
     import shapely.geometry
     import descartes
@@ -550,15 +568,9 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
     # Set the cutoff variable.
     if cutoff is None: cutoff = np.min([50, 0.05 * len(df)])
 
+    # fig, ax = plt.subplots()
     fig = plt.figure(figsize=figsize)
-    if colorbar:
-        gs = gridspec.GridSpec(1, 2, width_ratios=width_ratios)
-        gs.update(wspace=0.04)
-        ax1 = plt.subplot(gs[1])
-    else:
-        gs = gridspec.GridSpec(1, 1)
-    ax0 = plt.subplot(gs[0])
-    # plt.axes().set_aspect('auto')
+    ax = plt.subplot(111)
 
     # In case we're given something to categorize by, use that.
     if by:
@@ -602,19 +614,25 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
                 nullities[identifier] = {'nullity': geographic_nullity, 'shapes': polygons}
 
         # Prepare a colormap.
-        nullity_avgs = np.array([nullities[key]['nullity'] for key in nullities.keys()])
-        nullity_avg_deltas = nullity_avgs - np.average(nullity_avgs)
-        cmap = matplotlib.cm.rainbow(plt.Normalize(-1, 1)(nullity_avg_deltas))
+        cmap = matplotlib.cm.YlOrRd(plt.Normalize(0, 1)([nullities[key]['nullity'] for key in nullities.keys()]))
+        print(cmap)
 
         # Now we draw.
+        return [(nullities[key]['shapes']) for key in nullities.keys()], cmap
         for i, polygons in enumerate([(nullities[key]['shapes']) for key in nullities.keys()]):
+            # ax.add_patch(descartes.PolygonPatch(shapely.geometry.Polygon([[0,0],[0,1],[1,1],[1,0]]),
+            #                                     fc=cmap[i], ec='white', alpha=0.8, zorder=4))
+            # break
             for polygon in polygons:
-                ax0.add_patch(descartes.PolygonPatch(polygon, fc=cmap[i], ec='white', alpha=1, zorder=4))
+                print(polygon)
+                print(descartes.PolygonPatch(polygon, fc=cmap[i], ec='white', alpha=0.8, zorder=4).get_path())
+                ax.add_patch(descartes.PolygonPatch(polygon, fc=cmap[i], ec='white', alpha=0.8, zorder=4))
+
         # Remove extraneous plotting elements.
-        ax0.grid(b=False)
-        ax0.get_xaxis().set_visible(False)
-        ax0.get_yaxis().set_visible(False)
-        ax0.patch.set_visible(False)
+        ax.grid(b=False)
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        ax.patch.set_visible(False)
         plt.show()
 
     # In case we aren't given something to categorize by, we choose a spatial representation that's reasonably
@@ -657,35 +675,66 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
         # Many of the squares at the bottom of the quadtree will be inputted into the colormap as NaN values,
         # which matplotlib will map over as minimal values. We of course don't want that, so we pull the bottom out
         # of it.
+        nullities = [nullity for _, nullity in squares]
         cmap = matplotlib.cm.YlOrRd
         colors = [cmap(n) if pd.notnull(n) else [1,1,1,1]
-                  for n in plt.Normalize(0, 1)([nullity for _, nullity in squares])]
+                  for n in plt.Normalize(0, 1)(nullities)]
 
         # Now we draw.
         for i, ((min_x, max_x, min_y, max_y), _) in enumerate(squares):
             square = shapely.geometry.Polygon([[min_x, min_y], [max_x, min_y], [max_x, max_y], [min_x, max_y]])
-            ax0.add_patch(descartes.PolygonPatch(square, fc=colors[i], ec='white', alpha=1, zorder=4))
-        ax0.axis('image')
+            ax.add_patch(descartes.PolygonPatch(square, fc=colors[i], ec='white', alpha=1, zorder=4))
+        ax.axis('equal')
 
         # Remove extraneous plotting elements.
-        ax0.grid(b=False)
-        ax0.get_xaxis().set_visible(False)
-        ax0.get_yaxis().set_visible(False)
-        ax0.patch.set_visible(False)
+        ax.grid(b=False)
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        ax.patch.set_visible(False)
+        ax.xaxis.set_ticks_position('none')
+        ax.yaxis.set_ticks_position('none')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        ax.patch.set_visible(False)
 
-        # Style the colorbar, if it's present.
-        # if colorbar:
-        #     ax1.set_aspect('auto')
+        if hist:
+            # Add a histogram.
+            sns.set_style(None)
+            nonnan_nullities = [n for n in nullities if pd.notnull(n)]
+            # pd.Series(nonnan_nullities).plot(kind='hist')
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("bottom", size="25%", pad=0.00)
+            sns.distplot(pd.Series(nonnan_nullities), ax=cax, color=list(np.average(colors, axis=0)))
 
-        # Add colorbar. Creating colorbars is surprisingly difficult for patch collections, especially in our case
-        # because we overwrite the colormap in certain cases. It doesn't appear to be possible to automatically
-        # generate a oolorbar which doesn't also force exactly the given colormap onto the map (and raise an ugly
-        # RuntimeWarning when it encounters nulls, which is highly likely). Given all of this, it's easiest to
-        # manually create our own colorbar and add it to the plot.
-        if colorbar:
-            matplotlib.colorbar.ColorbarBase(ax1, cmap=cmap, orientation='vertical',
-                                             norm=matplotlib.colors.Normalize(vmin=0, vmax=1))
+            cax.grid(b=False)
+            # cax.get_xaxis().set_visible(False)
+            cax.get_yaxis().set_visible(False)
+            cax.patch.set_visible(False)
+            cax.xaxis.set_ticks_position('none')
+            cax.yaxis.set_ticks_position('none')
+            cax.spines['top'].set_visible(False)
+            cax.spines['right'].set_visible(False)
+            cax.spines['bottom'].set_visible(False)
+            cax.spines['left'].set_visible(False)
+            cax.patch.set_visible(False)
+            cax.tick_params(labelsize=fontsize)
+
+        # if legend:
+        #     nullities = [nullity for _, nullity in squares if pd.notnull(nullity)]
+        #     n0, n25, n50, n75, n100 =
+        #     # Disabled for now: hard to position properly. An earlier attempt using a colorbar achieved nothing more
+        #     # than lighting my patience on fire, so this seems to be a difficult thing to get right...
+        #     ax.text(0.8, 0.2, 'Min: {:0.2f}\nIQR: {:0.2f}\nMax: {:0.2f}'.format(minn, avgn, maxn),
+        #             horizontalalignment='right',
+        #             verticalalignment='top',
+        #             transform=ax.transAxes,
+        #             fontsize=16,
+        #             zorder=10)
+
         # Display.
-        plt.show()
-        # TODO: Figure out why mplleaflet doesn't integrate with this.
-        # TODO: Add color key.
+        if inline:
+            plt.show()
+        else:
+            return fig
