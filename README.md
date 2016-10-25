@@ -22,7 +22,7 @@ The `msno.matrix` nullity matrix is a data-dense display which lets you quickly 
 
     >>> import missingno as msno
     >>> %matplotlib inline
-    >>> msno.matrix(collision_data.sample(250))
+    >>> msno.matrix(collisions.sample(250))
 
 ![alt text][two_hundred_fifty]
 
@@ -37,22 +37,42 @@ rows.
 This visualization will comfortably accommodate up to 50 labelled variables. Past that range labels begin to overlap
 or become unreadable, and by default large displays omit them.
 
-    >>> msno.matrix(housing_data.sample(250))
+    >>> msno.matrix(housing.sample(250))
 
 ![alt text][large_matrix]
 
 [large_matrix]: http://i.imgur.com/yITFVju.png
 
+<!--
 You can override this behavior by specifying `labels=True`. In that case you will also want to set your own
 `fontsize` value. These optional parameters are among those covered in more detail in the
 [Visual configuration](#visual-configuration) section.
+-->
+
+### Bar Chart
+
+`msno.bar` is a simple visualization of nullity by column:
+
+    >>> msno.bar(collisions.sample(500))
+
+![alt text][bar]
+
+[bar]: http://i.imgur.com/N2LhNIl.png
+
+You can switch to a logarithmic scale by specifying `log=True`:
+
+![alt text][bar2]
+
+[bar2]: http://i.imgur.com/vztgMRj.png
+
+`bar` provides the same information as `matrix`, but in a simpler format.
 
 ### Heatmap
 
 The missingno correlation heatmap lets you measure how strongly the presence of one variable positively or negatively
 affect the presence of another:
 
-    >>> msno.heatmap(collision_data)
+    >>> msno.heatmap(collisions)
 
 ![alt text][heatmap]
 
@@ -82,7 +102,7 @@ is limited when it comes to larger relationships and it has no particular suppor
 The dendrogram allows you to more fully correlate variable completion, revealing trends deeper than the pairwise
 ones visible in the correlation heatmap:
 
-    >>> msno.dendrogram(collision_data)
+    >>> msno.dendrogram(collisions)
 
 ![alt text][dendrogram]
 
@@ -108,7 +128,7 @@ cluster leaf tells you, in absolute terms, how often the records are "mismatched
 As with `matrix`, only up to 50 labeled columns will comfortably display in this configuration. However the
 `dendrogram` more elegantly handles extremely large datasets by simply flipping to a horizontal configuration.
 
-    >>> msno.dendrogram(housing_data)
+    >>> msno.dendrogram(housing)
 
 ![alt text][large-dendrogram]
 
@@ -129,22 +149,19 @@ One kind of pattern that's particularly difficult to check, where it appears, is
 If no geographical context can be provided, `geoplot` can be used to compute a
 [quadtree](https://en.wikipedia.org/wiki/Quadtree) nullity distribution, as above, which splits the dataset into
 statistically significant chunks and colorizes them based on the average nullity of data points within them. In this
-case (fortunately for our analysis, but unfortunately for the purposes of presentation) it appears that our dataset's
+case (fortunately for analysis, but unfortunately for the purposes of demonstration) it appears that our dataset's
 data nullity is unaffected by geography.
 
 A quadtree analysis works remarkably well in most cases, but will not always be what you want. If you can specify a
 geographic grouping within the dataset (using the `by` keyword argument), you can plot your data as a set of
 minimum-enclosure [convex hulls](https://en.wikipedia.org/wiki/Convex_hull) instead (the following example also
-demonstrates adding a histogram to the display, using the `hist=True` argument):
+demonstrates adding a histogram to the display, using the `histogram=True` argument):
 
-    >>> msno.geoplot(collisions.sample(100000), x='LONGITUDE', y='LATITUDE', by='ZIP CODE', hist=True)
+    >>> msno.geoplot(collisions.sample(100000), x='LONGITUDE', y='LATITUDE', by='ZIP CODE', histogram=True)
 
 ![alt-text][hull-geoplot]
 
 [hull-geoplot]: http://i.imgur.com/3kfKMJO.png
-
-The histogram, if enabled via `hist=True` as above, shows the distribution of sectors by the percentage of their
-fields which are incomplete.
 
 Finally, if you have the *actual* geometries of your grouping (in the form of a `dict` or `pandas` `Series` of
 `shapely.Geometry` or `shapely.MultiPolygon` objects), you can dispense with all of this approximation and just plot
@@ -162,8 +179,7 @@ Two technical notes:
 * For the geographically inclined, this a [plat carre](https://en.wikipedia.org/wiki/Equirectangular_projection)
 projection&mdash;that is, none at all. Not pretty, but functional.
 * `geoplot` requires the [`shapely`](https://github.com/Toblerity/Shapely) and [`descartes`](https://pypi.python.org/pypi/descartes) libraries, which are
-ancillary to the rest of this package
-and are thus optional dependencies.
+ancillary to the rest of this package and are thus optional dependencies.
 
 ## Sorting and filtering
 
@@ -197,8 +213,7 @@ doesn't affect the underlying data it's mainly useful for `matrix` visualization
 
 [matrix_sorted]: http://i.imgur.com/qL6zNQj.png
 
-One final note. These methods also work inline within the visualization methods themselves. For instance, the
-following is perfectly valid:
+These methods work inline within the visualization methods themselves. For instance, the following is perfectly valid:
 
     >>> msno.matrix(data.sample(250), filter='top', n=5, p=0.9, sort='ascending')
 
@@ -208,7 +223,7 @@ following is perfectly valid:
 
 Each of the visualizations provides a further set of lesser configuration parameters for visually tweaking the display.
 
-`matrix`, `heatmap`, and `dendrogram` all provide:
+`matrix`, `bar`, `heatmap`, `dendrogram`, and `geoplot` all provide:
 
 * `figsize`: The size of the figure to display. This is a `matplotlib` parameter which defaults to `(20, 12)`, except
  for large `dendrogram` visualizations, which compute a height on the fly based on the number of variables to display.
@@ -224,6 +239,11 @@ the methods omit plotting and return their visualizations instead.
     1)`. Does nothing if `sparkline=False`.
 * `color`: The color of the filled columns. Defaults to `(0.25, 0.25, 0.25)`.
 
+`bar` also provides:
+* `log`: Set this to `True` to use a logarithmic scale.
+* `color`: The color of the filled columns. Defaults to `(0.25, 0.25, 0.25)`.
+
+
 `heatmap` also provides:
 * `cmap`: What `matplotlib` [colormap](http://matplotlib.org/users/colormaps.html) to use. Defaults to `RdBu`.
 
@@ -235,13 +255,13 @@ of the dendrogram. Defaults to `top` if `<=50` columns and
 * `method`: The [linkage method](http://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.linkage.html#scipy.cluster.hierarchy.linkage) `scipy.hierarchy` uses for clustering.
 `average` is the default argument.
 
-`geoplot` shares `figsize`, `fontsize`, and `inline` paramters, in addition to the following:
+`geoplot` also provides:
 * `x` AND `y` OR `coordinates`: A column of points (in either two columns or one) to plot. These are required.
 * `by`: A column of values to group points by.
 * `geometry`: A hash table (`dict` or `pd.Series` generally) geometries of the groups being aggregated, if available.
 * `cutoff`: The minimum number of observations per rectangle in the quadtree display. No effect if a different
 display is used. Defaults to `min([50, 0.05*len(df)])`.
-* `hist`: Whether or not to plot the histogram. Defaults to `False`.
+* `histogram`: Whether or not to plot the histogram. Defaults to `False`.
 
 ### Advanced configuration
 If you are not satisfied with these admittedly basic configuration parameters, the display can be further manipulated
@@ -252,15 +272,17 @@ The best way to do this is to specify `inline=False`, which will cause `missingn
 can then tweak the display to their liking. For example, the following code will bump the size of the dendrogram
 visualization's y-axis labels up from `20` to `30`:
 
-    >>> mat = msno.dendrogram(collision_data, inline=False)
+    >>> mat = msno.dendrogram(collisions, inline=False)
     >>> mat.axes[0].tick_params(axis='y', labelsize=30)
 
+<!--
 Note that if you are running `matplotlib` line in [inline plotting mode](http://www.scipy-lecture.org/intro/matplotlib/matplotlib.html#ipython-and-the-matplotlib-mode)
  (as was done above) it will always plot at the end of the cell anyway, so if you do not want to plot the same
  visualization multiple times you will want to do all of your manipulations in a single cell!
 
 Note that this may not be as well-behaved as I would like it to be. I'm still testing configuration&mdash;if you have
 any issues be sure to [file them]((https://github.com/ResidentMario/missingno/issues)).
+-->
 
 ## Further reading
 * The way that `numpy` and `pandas` represent null data informs how one goes about working with such data in Python. It's an interesting subject and an important design limitation that's good keep in mind in your work higher up the stack, so I wrote [an exploratory blog post on the subject](http://www.residentmar.io/2016/06/12/null-and-missing-data-python.html) that's well worth reading if you're into this sort of thing.
