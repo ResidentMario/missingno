@@ -115,8 +115,7 @@ def nullity_filter(df, filter=None, p=0, n=0):
 def matrix(df,
            filter=None, n=0, p=0, sort=None,
            figsize=(25, 10), width_ratios=(15, 1), color=(0.25, 0.25, 0.25),
-           fontsize=16, labels=None, sparkline=True, inline=False
-           ):
+           fontsize=16, labels=None, sparkline=True, histogram=False):
     """
     Presents a `matplotlib` matrix visualization of the nullity of the given DataFrame.
     
@@ -151,6 +150,7 @@ def matrix(df,
     :param color: The color of the filled columns. Default is a medium dark gray: the RGB multiple `(0.25, 0.25, 0.25)`.
     :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
     return its figure.
+    :param histogram: Whether or not to plot a histogram of the columnar data densities. Defaults to `False`.
     :return: If `inline` is True, the underlying `matplotlib.figure` object. Else, nothing.
     """
     # Apply filters and sorts.
@@ -174,12 +174,21 @@ def matrix(df,
     # If the sparkline is removed the layout is a unary subplot.
     # If the sparkline is included the layout is a left-right subplot.
     fig = plt.figure(figsize=figsize)
-    if sparkline:
+    if sparkline and not histogram:
         gs = gridspec.GridSpec(1, 2, width_ratios=width_ratios)
         gs.update(wspace=0.08)
         ax1 = plt.subplot(gs[1])
-    else:
+    elif not sparkline and not histogram:
         gs = gridspec.GridSpec(1, 1)
+    elif sparkline and histogram:
+        gs = gridspec.GridSpec(2,2, width_ratios=width_ratios, height_ratios=width_ratios)
+        gs.update(wspace=0.08, hspace=0.08)
+        ax1 = plt.subplot(gs[1])
+        ax2 = plt.subplot2grid((1,0), (1,1), colspan=2)
+    else:
+        gs = gridspec.GridSpec(2,1, height_ratios=width_ratios)
+        gs.update(hspace=0.08)
+        ax2 = plt.subplot(gs[1])
     ax0 = plt.subplot(gs[0])
     # Create the nullity plot.
     ax0.imshow(g, interpolation='none')
@@ -279,11 +288,12 @@ def matrix(df,
         # Remove tick mark (only works after plotting).
         ax1.xaxis.set_ticks_position('none')
 
+    if histogram:
+        pass
+        # TODO: Implement.
+
     # Plot if inline, return the figure if not.
-    if inline:
-        plt.show()
-    else:
-        return fig
+    plt.show()
 
 
 def heatmap(df, inline=True,
@@ -494,7 +504,7 @@ def _calculate_geographic_nullity(geo_group, x_col, y_col):
         return points, np.nan
 
 
-def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff=None, hist=False,
+def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff=None, histogram=False,
             figsize=(25, 10), fontsize=8, inline=True):
     """
     Generates a geographical data nullity heatmap, which shows the distribution of missing data across geographic
@@ -524,7 +534,7 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
     each square. If not provided, set to 50 or 5% of the total size of the dataset, whichever is smaller. If `by` is
     specified this parameter is ignored.
     :param figsize: The size of the figure to display. This is a `matplotlib` parameter which defaults to (25, 10).
-    :param hist: Whether or not to plot a histogram of data distributions below the map. Defaults to False.
+    :param histogram: Whether or not to plot a histogram of data distributions below the map. Defaults to False.
     :param fontsize: If `hist` is specified, this parameter specifies the size of the tick labels. Ignored if `hist`
     is not specified. Defaults to 8.
     :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
