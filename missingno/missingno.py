@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 from scipy.cluster import hierarchy
 import seaborn as sns
 
-
 def _ascending_sort(df):
     """
     Helper method for sorting.
@@ -113,8 +112,8 @@ def nullity_filter(df, filter=None, p=0, n=0):
 def matrix(df,
            filter=None, n=0, p=0, sort=None,
            figsize=(25, 10), width_ratios=(15, 1), color=(0.25, 0.25, 0.25),
-           fontsize=16, labels=None, sparkline=True, inline=True, flip=None
-           ):
+           fontsize=16, labels=None, sparkline=True, inline=True, flip=None,
+           freq=None):
     """
     Presents a `matplotlib` matrix visualization of the nullity of the given DataFrame.
     
@@ -153,6 +152,8 @@ def matrix(df,
     otherwise.
     :return: Returns the underlying `matplotlib.figure` object.
     """
+    if freq: import pandas as pd
+
     # Apply filters and sorts.
     df = nullity_filter(df, filter=filter, n=n, p=p)
     df = nullity_sort(df, sort=sort)
@@ -208,9 +209,42 @@ def matrix(df,
     else:
         ax0.set_xticks([])
 
-    # Set up the two top-bottom row ticks.
-    ax0.set_yticks([0, df.shape[0] - 1])
-    ax0.set_yticklabels([1, df.shape[0]], fontsize=20, rotation=0)
+    # Adds Timestamps ticks if freq is not None,
+    # else sets up the two top-bottom row ticks.
+    if freq:
+        ts_list = []
+
+        if type(df.index) == pd.tseries.period.PeriodIndex:
+            ts_array = pd.date_range(df.index.to_timestamp().date[0],
+                                     df.index.to_timestamp().date[-1],
+                                     freq=freq).values
+
+            ts_ticks = pd.date_range(df.index.to_timestamp().date[0],
+                                     df.index.to_timestamp().date[-1],
+                                     freq=freq).map(lambda t:
+                                                    t.strftime('%Y-%m-%d'))
+
+        elif type(df.index) == pd.tseries.index.DatetimeIndex:
+            ts_array = pd.date_range(df.index.date[0], df.index.date[-1],
+                                     freq=freq).values
+
+            ts_ticks = pd.date_range(df.index.date[0], df.index.date[-1],
+                                     freq=freq).map(lambda t:
+                                                    t.strftime('%Y-%m-%d'))
+        else:
+            print('Dataframe index must be PeriodIndex or DatetimeIndex')
+        try:
+            for value in ts_array:
+                ts_list.append(df.index.get_loc(value))
+        except KeyError:
+            return print("Could not divide time index into desired Frequency")
+
+        ax0.set_yticks(ts_list)
+        ax0.set_yticklabels(ts_ticks, fontsize=20, rotation=0)
+    else:
+        ax0.set_yticks([0, df.shape[0] - 1])
+        ax0.set_yticklabels([1, df.shape[0]], fontsize=20, rotation=0)
+
     # Create the inter-column vertical grid.
     in_between_point = [x + 0.5 for x in range(0, width - 1)]
     for in_between_point in in_between_point:
