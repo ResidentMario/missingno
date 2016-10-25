@@ -152,7 +152,7 @@ def matrix(df,
     otherwise.
     :return: Returns the underlying `matplotlib.figure` object.
     """
-    if freq: from pandas import date_range
+    if freq: import pandas as pd
 
     # Apply filters and sorts.
     df = nullity_filter(df, filter=filter, n=n, p=p)
@@ -213,19 +213,34 @@ def matrix(df,
     # else sets up the two top-bottom row ticks.
     if freq:
         ts_list = []
-        ts_array = date_range(df.index.date[0], df.index.date[-1],
-                                 freq=freq).values
+
+        if type(df.index) == pd.tseries.period.PeriodIndex:
+            ts_array = pd.date_range(df.index.to_timestamp().date[0],
+                                     df.index.to_timestamp().date[-1],
+                                     freq=freq).values
+
+            ts_ticks = pd.date_range(df.index.to_timestamp().date[0],
+                                     df.index.to_timestamp().date[-1],
+                                     freq=freq).map(lambda t:
+                                                    t.strftime('%Y-%m-%d'))
+
+        elif type(df.index) == pd.tseries.index.DatetimeIndex:
+            ts_array = pd.date_range(df.index.date[0], df.index.date[-1],
+                                     freq=freq).values
+
+            ts_ticks = pd.date_range(df.index.date[0], df.index.date[-1],
+                                     freq=freq).map(lambda t:
+                                                    t.strftime('%Y-%m-%d'))
+        else:
+            print('Dataframe index must be PeriodIndex or DatetimeIndex')
         try:
             for value in ts_array:
                 ts_list.append(df.index.get_loc(value))
         except KeyError:
-            return print("Could not divide data into desired Frequency")
-        ts_array = date_range(df.index.date[0], df.index.date[-1],
-                                 freq=freq).map(lambda t:
-                                                t.strftime('%Y-%m-%d'))
+            return print("Could not divide time index into desired Frequency")
 
         ax0.set_yticks(ts_list)
-        ax0.set_yticklabels(ts_array, fontsize=20, rotation=0)
+        ax0.set_yticklabels(ts_ticks, fontsize=20, rotation=0)
     else:
         ax0.set_yticks([0, df.shape[0] - 1])
         ax0.set_yticklabels([1, df.shape[0]], fontsize=20, rotation=0)
