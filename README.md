@@ -57,13 +57,13 @@ You can override this behavior by specifying `labels=True`. In that case you wil
 
 ![alt text][bar]
 
-[bar]: http://i.imgur.com/N2LhNIl.png
+[bar]: http://i.imgur.com/kITJfB4.png
 
 You can switch to a logarithmic scale by specifying `log=True`:
 
 ![alt text][bar2]
 
-[bar2]: http://i.imgur.com/vztgMRj.png
+[bar2]: http://i.imgur.com/YZDaAV3.png
 
 `bar` provides the same information as `matrix`, but in a simpler format.
 

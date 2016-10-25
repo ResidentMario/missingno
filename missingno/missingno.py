@@ -328,7 +328,7 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color=(0.25, 
     :return: If `inline` is True, the underlying `matplotlib.figure` object. Else, nothing.
     """
     # Get counts.
-    nullity_counts = df.isnull().sum()
+    nullity_counts = len(df) - df.isnull().sum()
 
     # Apply filters and sorts.
     df = nullity_filter(df, filter=filter, n=n, p=p)
