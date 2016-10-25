@@ -4,7 +4,7 @@ setup(
   packages = ['missingno'], # this must be the same as the name above
   install_requires=['numpy', 'matplotlib', 'scipy', 'seaborn'],
   py_modules=['missingno'],
-  version = '0.2.4',
+  version = '0.3.0',
   description = 'Missing data visualization module for Python.',
   author = 'Aleksey Bilogur',
   author_email = 'aleksey.bilogur@gmail.com',
