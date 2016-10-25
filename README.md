@@ -57,7 +57,7 @@ You can override this behavior by specifying `labels=True`. In that case you wil
 
 ![alt text][bar]
 
-[bar]: http://i.imgur.com/kITJfB4.png
+[bar]: http://i.imgur.com/lOTN3tm.png
 
 You can switch to a logarithmic scale by specifying `log=True`:
 
