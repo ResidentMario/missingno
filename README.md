@@ -253,7 +253,7 @@ can then tweak the display to their liking. For example, the following code will
 visualization's y-axis labels up from `20` to `30`:
 
     >>> mat = msno.dendrogram(collision_data, inline=False)
-        mat.axes[0].tick_params(axis='y', labelsize=30)
+    >>> mat.axes[0].tick_params(axis='y', labelsize=30)
 
 Note that if you are running `matplotlib` line in [inline plotting mode](http://www.scipy-lecture.org/intro/matplotlib/matplotlib.html#ipython-and-the-matplotlib-mode)
  (as was done above) it will always plot at the end of the cell anyway, so if you do not want to plot the same
