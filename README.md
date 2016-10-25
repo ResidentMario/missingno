@@ -115,7 +115,57 @@ As with `matrix`, only up to 50 labeled columns will comfortably display in this
 [large-dendrogram]: http://i.imgur.com/HDa06O9.png
 
 
-### Sorting and filtering
+### Geoplot
+
+One kind of pattern that's particularly difficult to check, where it appears, is geographic distribution. The geoplot
+ makes this easy:
+
+    >>> msno.geoplot(collisions.sample(100000), x='LONGITUDE', y='LATITUDE')
+
+![alt-text][large-geoplot]
+
+[large-geoplot]: http://i.imgur.com/4dtGhig.png
+
+If no geographical context can be provided, `geoplot` can be used to compute a
+[quadtree](https://en.wikipedia.org/wiki/Quadtree) nullity distribution, as above, which splits the dataset into
+statistically significant chunks and colorizes them based on the average nullity of data points within them. In this
+case (fortunately for our analysis, but unfortunately for the purposes of presentation) it appears that our dataset's
+data nullity is unaffected by geography.
+
+A quadtree analysis works remarkably well in most cases, but will not always be what you want. If you can specify a
+geographic grouping within the dataset (using the `by` keyword argument), you can plot your data as a set of
+minimum-enclosure [convex hulls](https://en.wikipedia.org/wiki/Convex_hull) instead (the following example also
+demonstrates adding a histogram to the display, using the `hist=True` argument):
+
+    >>> msno.geoplot(collisions.sample(100000), x='LONGITUDE', y='LATITUDE', by='ZIP CODE', hist=True)
+
+![alt-text][hull-geoplot]
+
+[hull-geoplot]: http://i.imgur.com/3kfKMJO.png
+
+The histogram, if enabled via `hist=True` as above, shows the distribution of sectors by the percentage of their
+fields which are incomplete.
+
+Finally, if you have the *actual* geometries of your grouping (in the form of a `dict` or `pandas` `Series` of
+`shapely.Geometry` or `shapely.MultiPolygon` objects), you can dispense with all of this approximation and just plot
+*exactly* what you mean:
+
+    >>> msno.geoplot(collisions.sample(1000), x='LONGITUDE', y='LATITUDE', by='BOROUGH', geometry=geom)
+
+![alt-text][true-geoplot]
+
+[true-geoplot]: http://i.imgur.com/fAyxqnk.png
+
+In this case this is the least interesting result of all.
+
+Two technical notes:
+* For the geographically inclined, this a [plat carre](https://en.wikipedia.org/wiki/Equirectangular_projection)
+projection&mdash;that is, none at all. Not pretty, but functional.
+* `geoplot` requires the [`shapely`](https://github.com/Toblerity/Shapely) and [`descartes`](https://pypi.python.org/pypi/descartes) libraries, which are
+ancillary to the rest of this package
+and are thus optional dependencies.
+
+## Sorting and filtering
 
 `missingno` also provides utility functions for filtering records in your dataset based on completion. These are
 useful in particular for filtering through and drilling down into particularly large datasets whose data nullity
@@ -179,12 +229,19 @@ the methods omit plotting and return their visualizations instead.
 
 
 `dendrogram` also provides:
-* `orientation` The [orientation](http://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.dendrogram.html#scipy.cluster.hierarchy.dendrogram)
+* `orientation`: The [orientation](http://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.dendrogram.html#scipy.cluster.hierarchy.dendrogram)
 of the dendrogram. Defaults to `top` if `<=50` columns and
 `left` if there are more.
 * `method`: The [linkage method](http://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.linkage.html#scipy.cluster.hierarchy.linkage) `scipy.hierarchy` uses for clustering.
 `average` is the default argument.
 
+`geoplot` shares `figsize`, `fontsize`, and `inline` paramters, in addition to the following:
+* `x` AND `y` OR `coordinates`: A column of points (in either two columns or one) to plot. These are required.
+* `by`: A column of values to group points by.
+* `geometry`: A hash table (`dict` or `pd.Series` generally) geometries of the groups being aggregated, if available.
+* `cutoff`: The minimum number of observations per rectangle in the quadtree display. No effect if a different
+display is used. Defaults to `min([50, 0.05*len(df)])`.
+* `hist`: Whether or not to plot the histogram. Defaults to `False`.
 
 ### Advanced configuration
 If you are not satisfied with these admittedly basic configuration parameters, the display can be further manipulated
@@ -196,7 +253,7 @@ can then tweak the display to their liking. For example, the following code will
 visualization's y-axis labels up from `20` to `30`:
 
     >>> mat = msno.dendrogram(collision_data, inline=False)
-        mat.axes[0].tick_params(axis='y', labelsize=30)
+    >>> mat.axes[0].tick_params(axis='y', labelsize=30)
 
 Note that if you are running `matplotlib` line in [inline plotting mode](http://www.scipy-lecture.org/intro/matplotlib/matplotlib.html#ipython-and-the-matplotlib-mode)
  (as was done above) it will always plot at the end of the cell anyway, so if you do not want to plot the same

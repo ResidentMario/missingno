@@ -3,6 +3,8 @@ from matplotlib import gridspec
 import matplotlib.pyplot as plt
 from scipy.cluster import hierarchy
 import seaborn as sns
+import pandas as pd
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 def _ascending_sort(df):
     """
@@ -98,17 +100,6 @@ def nullity_filter(df, filter=None, p=0, n=0):
     return _df
 
 
-# def _set_font_size(fig, df, fontsize):
-#     """
-#     Guesses an appropriate fontsize for the given columnar visualization text labels.
-#     Used if a fontsize is not provided via a parameter.
-#     """
-#     if fontsize:
-#         return fontsize
-#     else:
-#         return max(min(20, int((fig.get_size_inches()[1] * 0.7) * fig.dpi / len(df.columns))), 16)
-
-
 def matrix(df,
            filter=None, n=0, p=0, sort=None,
            figsize=(25, 10), width_ratios=(15, 1), color=(0.25, 0.25, 0.25),
@@ -116,17 +107,16 @@ def matrix(df,
            freq=None):
     """
     Presents a `matplotlib` matrix visualization of the nullity of the given DataFrame.
-    
+
     Note that for the default `figsize` 250 is a soft display limit: specifying a number of records greater than
     approximately this value will cause certain records to show up in the sparkline but not in the matrix, which can
     be confusing.
-    
-    
+
+
     The default vertical display will fit up to 50 columns. If more than 50 columns are specified and the labels
     parameter is left unspecified the visualization will automatically drop the labels as they will not be very
     readable. You can override this behavior using `labels=True` and your own `fontsize` parameter.
 
-    
     :param df: The DataFrame whose completeness is being nullity matrix mapped.
     :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default). See
     `nullity_filter()` for more information.
@@ -152,6 +142,8 @@ def matrix(df,
     otherwise.
     :return: Returns the underlying `matplotlib.figure` object.
     """
+
+
     if freq: import pandas as pd
 
     # Apply filters and sorts.
@@ -163,14 +155,14 @@ def matrix(df,
 
     # z is the color-mask array.
     z = df.notnull().values
-    
+
     # g is a NxNx3 matrix
     g = np.zeros((height, width, 3))
 
     # Apply the z color-mask to set the RGB of each pixel.
     g[z < 0.5] = [1, 1, 1]
     g[z > 0.5] = color
-        
+
     # Set up the matplotlib grid layout.
     # If the sparkline is removed the layout is a unary subplot.
     # If the sparkline is included the layout is a left-right subplot.
@@ -343,7 +335,9 @@ def heatmap(df, inline=True,
     :param fontsize: The figure's font size.
     :param labels: Whether or not to label each matrix entry with its correlation (default is True).
     :param cmap: What `matplotlib` colormap to use. Defaults to `RdBu`.
-    :return: Returns the underlying `matplotlib.figure` object.
+    :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
+    return its figure.
+    :return: If `inline` is True, the underlying `matplotlib.figure` object. Else, nothing.
     """
     # Apply filters and sorts.
     df = nullity_filter(df, filter=filter, n=n, p=p)
@@ -431,7 +425,9 @@ def dendrogram(df, method='average',
     :param fontsize: The figure's font size.
     :param orientation: The way the dendrogram is oriented. Defaults to top-down if there are less than or equal to 50
     columns and left-right if there are more.
-    :return: Returns the underlying `matplotlib.figure` object.
+    :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
+    return its figure.
+    :return: If `inline` is True, the underlying `matplotlib.figure` object. Else, nothing.
     """
     # Figure out the appropriate figsize.
     if not figsize:
@@ -503,3 +499,246 @@ def dendrogram(df, method='average',
         plt.show()
     else:
         return fig
+
+
+def _calculate_geographic_nullity(geo_group, x_col, y_col):
+    """
+    Helper method which calculates the nullity of a DataFrame. Factored out of and used within `geoplot`.
+    """
+    # Aggregate by point and fetch a list of non-null coordinate pairs, which is returned.
+    point_groups = geo_group.groupby([x_col, y_col])
+    points = [point for point in point_groups.groups.keys() if pd.notnull(point[0]) and pd.notnull(point[1])]
+    # Calculate nullities by location, then take their average within the overall feature.
+    counts = np.sum(point_groups.count().values, axis=1)
+    entries = point_groups.size()
+    width = len(geo_group.columns)
+    # Remove empty (NaN, NaN) points.
+    if len(entries) > 0:  # explicit check to avoid a Runtime Warning
+        geographic_nullity = np.average(1 - counts / width / entries)
+        return points, geographic_nullity
+    else:
+        return points, np.nan
+
+
+def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff=None, histogram=False,
+            figsize=(25, 10), fontsize=8, inline=True):
+    """
+    Generates a geographical data nullity heatmap, which shows the distribution of missing data across geographic
+    regions. The precise output depends on the inputs provided. In increasing order of usefulness:
+
+    *   If no geographical context is provided, a quadtree is computed and nullities are rendered as abstract
+        geopgrahical squares.
+    *   If geographical context is provided in the form of a column of geographies (region, borough. ZIP code,
+        etc.) in the `DataFrame`, convex hulls are computed for each of the point groups and the heatmap is generated
+        within them.
+    *   If geographical context is provided *and* a separate geometry is provided, a heatmap is generated for each
+        point group within this geograpby instead.
+
+    :param df: The DataFrame whose completeness is being mapped.
+    :param x: The x variable: probably a coordinate (longitude), possibly some other floating point value. May be a
+    string (pointing to a column of df) or an iterable.
+    :param y: The y variable: probably a coordinate (latitude), possibly some other floating point value. May be a
+    string (pointing to a column of df) or an iterable.
+    :param coordinates: A coordinate tuple iterable, or column thereof in the given DataFrame. One of x AND y OR
+    coordinates must be specified, but not both.
+    :param by: If you would like to aggregate your geometry by some geospatial attribute of the underlying DataFrame,
+    name that column here.
+    :param geometry: If you would like to provide your own geometries for your aggregation, instead of relying on
+    (functional, but not pretty) convex hulls, provide them here. This parameter is expected to be a dict or Series
+    of `shapely.Polygon` or `shapely.MultiPolygon` objects. It's ignored if `by` is not specified.
+    :param cutoff: If no aggregation is specified, this parameter sets the minimum number of observations to include in
+    each square. If not provided, set to 50 or 5% of the total size of the dataset, whichever is smaller. If `by` is
+    specified this parameter is ignored.
+    :param figsize: The size of the figure to display. This is a `matplotlib` parameter which defaults to (25, 10).
+    :param histogram: Whether or not to plot a histogram of data distributions below the map. Defaults to False.
+    :param fontsize: If `hist` is specified, this parameter specifies the size of the tick labels. Ignored if `hist`
+    is not specified. Defaults to 8.
+    :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
+    return its figure.
+    :return: If `inline` is True, the underlying `matplotlib.figure` object. Else, nothing.
+    """
+    import shapely.geometry
+    import descartes
+    import matplotlib.cm
+    # We produce a coordinate column in-place in a function-local copy of the `DataFrame`.
+    # This seems specious, and sort of is, but is necessary because the internal `pandas` aggregation methods
+    # (`pd.core.groupby.DataFrameGroupBy.count` specifically) are optimized to run two orders of magnitude faster than
+    # user-defined external `groupby` operations. For example:
+    # >>> %time df.head(100000).groupby(lambda ind: df.iloc[ind]['LOCATION']).count()
+    # Wall time: 12.7 s
+    # >>> %time df.head(100000).groupby('LOCATION').count()
+    # Wall time: 96 ms
+    x_col = '__x'
+    y_col = '__y'
+    if x and y:
+        if isinstance(x, str) and isinstance(y, str):
+            x_col = x
+            y_col = y
+        else:
+            df['__x'] = x
+            df['__y'] = y
+    elif coordinates:
+        if isinstance(coordinates, str):
+            # Quick conversion to enable fancy numpy indexing. This allows fast operations like `df[coord_col][0,...]`
+            coord_col = np.array([np.array(e) if pd.notnull(e) else np.array(np.nan, np.nan) for e in df[coordinates]])
+            df['__x'] = coord_col[:, 0]
+            df['__y'] = coord_col[:, 1]
+        else:
+            # cf. Above.
+            coord_col = np.array([np.array(e) for e in coordinates])
+            df['__x'] = coord_col[:, 0]
+            df['__y'] = coord_col[:, 1]
+    else:
+        raise IndexError("x AND y OR coordinates parameters expected.")
+
+    # Set the cutoff variable.
+    if cutoff is None: cutoff = np.min([50, 0.05 * len(df)])
+
+    # fig, ax = plt.subplots()
+    fig = plt.figure(figsize=figsize)
+    ax = plt.subplot(111)
+
+    # In case we're given something to categorize by, use that.
+    if by:
+        nullity_dict = dict()
+        # This loop calculates and stores geographic feature averages and their polygons.
+        for identifier, geo_group in df.groupby(by):  # ex. ('BRONX', <pd.DataFrame with 10511 objects>)
+            # A single observation in the group will produce a `Point` hull, while two observations in the group
+            # will produce a `LineString` hull. Neither of these is desired, nor accepted by `PatchCollection`
+            # further on. So we remove these cases by filtering them (1) before and (2) after aggregation steps.
+            # cf. http://toblerity.org/shapely/manual.html#object.convex_hull
+            if not len(geo_group) > 2:
+                continue
+
+            # The following subroutine groups `geo_group` by `x_col` and `y_col`, and calculates and returns
+            # a list of points in the group (`points`) as well as its overall nullity (`geographic_nullity`).
+            points, geographic_nullity = _calculate_geographic_nullity(geo_group, x_col, y_col)
+
+            # If thinning the points, above, reduced us below the threshold for a proper polygonal hull (See the
+            # note at the beginning of thos loop), stop here.
+            if not len(points) > 2:
+                continue
+
+            # If no geometry is provided, calculate and store the hulls and averages.
+            if geometry is None:
+                    hull = shapely.geometry.MultiPoint(points).convex_hull
+                    nullity_dict[identifier] = {'nullity': geographic_nullity, 'shapes': [hull]}
+
+            # If geometry is provided, use that instead.
+            else:
+                geom = geometry[identifier]
+                polygons = []
+                # Valid polygons are simple polygons (`shapely.geometry.Polygon`) and complex multi-piece polygons
+                # (`shapely.geometry.MultiPolygon`). The latter is an iterable of its components, so if the shape is
+                # a `MultiPolygon`, append it as that list. Otherwise if the shape is a basic `Polygon`,
+                # append a list with one element, the `Polygon` itself.
+                if isinstance(geom, shapely.geometry.MultiPolygon):
+                    polygons = shapely.ops.cascaded_union([p for p in geometry])
+                else:  # shapely.geometry.Polygon
+                    polygons = [geom]
+                nullity_dict[identifier] = {'nullity': geographic_nullity, 'shapes': polygons}
+
+        # Prepare a colormap.
+        nullities = [nullity_dict[key]['nullity'] for key in nullity_dict.keys()]
+        colors = matplotlib.cm.YlOrRd(plt.Normalize(0, 1)(nullities))
+
+        # Now we draw.
+        for i, polygons in enumerate([(nullity_dict[key]['shapes']) for key in nullity_dict.keys()]):
+            for polygon in polygons:
+                ax.add_patch(descartes.PolygonPatch(polygon, fc=colors[i], ec='white', alpha=0.8, zorder=4))
+        ax.axis('equal')
+
+        # Remove extraneous plotting elements.
+        ax.grid(b=False)
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        ax.patch.set_visible(False)
+
+    # In case we aren't given something to categorize by, we choose a spatial representation that's reasonably
+    # efficient and informative: quadtree rectangles.
+    # Note: SVD could perhaps be applied to the axes to discover point orientation and realign the grid to match
+    # that, but I'm uncertain that this computationally acceptable and, in the case of comparisons, even a good
+    # design choice. Perhaps this could be implemented at a later date.
+    else:
+        df = df[(pd.notnull(df[x_col])) & (pd.notnull(df[y_col]))]
+        min_x, max_x = df[x_col].min(), df[x_col].max()
+        min_y, max_y = df[y_col].min(), df[y_col].max()
+
+        rectangles = []
+
+        # Recursive quadtree. This subroutine, when, builds a dictionary of squares, stored by tuples keyed with
+        # (min_x, max_x, min_y, max_y), whose values are the nullity of squares containing less than 100 observations.
+        def squarify(_min_x, _max_x, _min_y, _max_y, df):
+            arr = df[[x_col, y_col]].values
+            points_inside = df[(_min_x < arr[:,0]) &
+                               (arr[:,0] < _max_x) &
+                               (_min_y < arr[:,1]) &
+                               (arr[:,1] < _max_y)]
+            if len(points_inside) < cutoff:
+                # The following subroutine groups `geo_group` by `x_col` and `y_col`, and calculates and returns
+                # a list of points in the group (`points`) as well as its overall nullity (`geographic_nullity`). The
+                # first of these calculations is ignored.
+                _, square_nullity = _calculate_geographic_nullity(points_inside, x_col, y_col)
+                rectangles.append(((_min_x, _max_x,_min_y, _max_y), square_nullity))
+            else:
+                _mid_x, _mid_y = (_min_x + _max_x) / 2, (_min_y + _max_y) / 2
+                squarify(_min_x, _mid_x, _mid_y, _max_y, points_inside)
+                squarify(_min_x, _mid_x, _min_y, _mid_y, points_inside)
+                squarify(_mid_x, _max_x, _mid_y, _max_y, points_inside)
+                squarify(_mid_x, _max_x, _min_y, _mid_y, points_inside)
+
+        # Populate the `squares` array, per the above.
+        squarify(min_x, max_x, min_y, max_y, df)
+
+        # Prepare a colormap.
+        # Many of the squares at the bottom of the quadtree will be inputted into the colormap as NaN values,
+        # which matplotlib will map over as minimal values. We of course don't want that, so we pull the bottom out
+        # of it.
+        nullities = [nullity for _, nullity in rectangles]
+        cmap = matplotlib.cm.YlOrRd
+        colors = [cmap(n) if pd.notnull(n) else [1,1,1,1]
+                  for n in plt.Normalize(0, 1)(nullities)]
+
+        # Now we draw.
+        for i, ((min_x, max_x, min_y, max_y), _) in enumerate(rectangles):
+            square = shapely.geometry.Polygon([[min_x, min_y], [max_x, min_y], [max_x, max_y], [min_x, max_y]])
+            ax.add_patch(descartes.PolygonPatch(square, fc=colors[i], ec='white', alpha=1, zorder=4))
+        ax.axis('equal')
+
+        # Remove extraneous plotting elements.
+        ax.grid(b=False)
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        ax.patch.set_visible(False)
+        ax.xaxis.set_ticks_position('none')
+        ax.yaxis.set_ticks_position('none')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        ax.patch.set_visible(False)
+
+    if histogram:
+        # Add a histogram.
+        sns.set_style(None)
+        nonnan_nullities = [n for n in nullities if pd.notnull(n)]
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("bottom", size="25%", pad=0.00)
+        sns.distplot(pd.Series(nonnan_nullities), ax=cax, color=list(np.average(colors, axis=0)))
+
+        cax.grid(b=False)
+        # cax.get_xaxis().set_visible(False)
+        cax.get_yaxis().set_visible(False)
+        cax.patch.set_visible(False)
+        cax.xaxis.set_ticks_position('none')
+        cax.yaxis.set_ticks_position('none')
+        cax.spines['top'].set_visible(False)
+        cax.spines['right'].set_visible(False)
+        cax.spines['bottom'].set_visible(False)
+        cax.spines['left'].set_visible(False)
+        cax.patch.set_visible(False)
+        cax.tick_params(labelsize=fontsize)
+
+    # Display.
+    plt.show()
+

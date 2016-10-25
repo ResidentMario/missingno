@@ -37,4 +37,7 @@ pip-delete-this-directory.txt
 
 # Project-specific
 *.csv
+*.geojson
 missingno.ipynb
+*.ipynb
+_map.html
