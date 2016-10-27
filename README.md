@@ -1,4 +1,4 @@
-# missingno [![PyPi version](https://img.shields.io/pypi/v/missingno.svg)](https://pypi.python.org/pypi/missingno/)
+# missingno [![PyPi version](https://img.shields.io/pypi/v/missingno.svg)](https://pypi.python.org/pypi/missingno/) ![t](https://img.shields.io/badge/status-stable-green.svg)
 
 Messy datasets? Missing values? `missingno` provides a small toolset of flexible and easy-to-use missing data
 visualizations and utilities that allows you to get a quick visual summary of the completeness (or lack thereof) of
