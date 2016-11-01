@@ -221,7 +221,8 @@ def matrix(df,
             for value in ts_array:
                 ts_list.append(df.index.get_loc(value))
         except KeyError:
-            return print("Could not divide time index into desired Frequency")
+            print("Could not divide time index into desired Frequency")
+            return 
 
         ax0.set_yticks(ts_list)
         ax0.set_yticklabels(ts_ticks, fontsize=20, rotation=0)
