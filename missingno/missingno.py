@@ -216,13 +216,12 @@ def matrix(df,
                                      freq=freq).map(lambda t:
                                                     t.strftime('%Y-%m-%d'))
         else:
-            print('Dataframe index must be PeriodIndex or DatetimeIndex')
+            raise KeyError("Dataframe index must be PeriodIndex or DatetimeIndex.")
         try:
             for value in ts_array:
                 ts_list.append(df.index.get_loc(value))
         except KeyError:
-            print("Could not divide time index into desired Frequency")
-            return 
+            raise KeyError("Could not divide time index into desired frequency.")
 
         ax0.set_yticks(ts_list)
         ax0.set_yticklabels(ts_ticks, fontsize=20, rotation=0)
