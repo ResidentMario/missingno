@@ -5,3 +5,4 @@ from .missingno import dendrogram
 from .missingno import geoplot
 from .missingno import nullity_filter
 from .missingno import nullity_sort
+from .missingno import __version__

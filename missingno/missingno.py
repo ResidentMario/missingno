@@ -6,7 +6,7 @@ import seaborn as sns
 import pandas as pd
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-__version__ = "0.3.3"
+__version__ = "0.3.4"
 
 
 def _ascending_sort(df):
