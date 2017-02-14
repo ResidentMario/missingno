@@ -6,6 +6,8 @@ import seaborn as sns
 import pandas as pd
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
+__version__ = "0.3.3"
+
 
 def _ascending_sort(df):
     """
@@ -247,7 +249,7 @@ def matrix(df,
         # Set up the sparkline.
         ax1.grid(b=False)
         ax1.set_aspect('auto')
-        ax1.set_axis_bgcolor((1, 1, 1))
+        ax1.set_facecolor((1, 1, 1))
         # Remove the black border.
         ax1.spines['top'].set_visible(False)
         ax1.spines['right'].set_visible(False)
@@ -343,7 +345,6 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color=(0.25, 
 
     # Start appending elements, starting with a modified bottom x axis.
     if labels or (labels is None and len(df.columns) <= 50):
-        pos = ax1.get_xticks()
         ax1.set_xticklabels(ax1.get_xticklabels(), rotation=45, ha='right', fontsize=fontsize)
 
         # Create the numerical ticks.
@@ -366,7 +367,7 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color=(0.25, 
 
     # Create the third axis, which displays columnar totals above the rest of the plot.
     ax3 = ax1.twiny()
-    ax3.set_xticks(pos)
+    ax3.set_xticks(ax1.get_xticks())
     ax3.set_xlim(ax1.get_xlim())
     ax3.set_xticklabels(nullity_counts.values, fontsize=fontsize, rotation=45, ha='left')
     ax3.grid(False)
