@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib as mpl
 from matplotlib import gridspec
 import matplotlib.pyplot as plt
 from scipy.cluster import hierarchy
@@ -6,7 +7,7 @@ import seaborn as sns
 import pandas as pd
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-__version__ = "0.3.4"
+__version__ = "0.3.5"
 
 
 def _ascending_sort(df):
@@ -249,12 +250,19 @@ def matrix(df,
         # Set up the sparkline.
         ax1.grid(b=False)
         ax1.set_aspect('auto')
-        ax1.set_facecolor((1, 1, 1))
+        # set_facecolor in mpl >= 2.0.0, set_axis_bgcolor in mpl < 2.0.0
+        # GH 25
+        if int(mpl.__version__[0]) <= 1:
+            ax1.set_axis_bgcolor((1, 1, 1))
+        else:
+            ax1.set_facecolor((1, 1, 1))
         # Remove the black border.
         ax1.spines['top'].set_visible(False)
         ax1.spines['right'].set_visible(False)
         ax1.spines['bottom'].set_visible(False)
         ax1.spines['left'].set_visible(False)
+        # Set y-margin to 0.
+        ax1.set_ymargin(0)
 
         # Plot sparkline---plot is sideways so the x and y axis are reversed.
         ax1.plot(y_range, x_domain, color=color)
