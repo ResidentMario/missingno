@@ -311,7 +311,7 @@ def matrix(df,
     if inline:
         plt.show()
     else:
-        return plt
+        return fig
 
 
 def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color=(0.25, 0.25, 0.25), inline=True,
