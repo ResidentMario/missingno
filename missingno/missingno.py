@@ -424,7 +424,7 @@ def heatmap(df, inline=True,
     ax0 = plt.subplot(gs[0])
 
     # Pre-processing: remove completely filled or completely empty variables.
-    df = df[[i for i, n in enumerate(np.var(df.isnull(), axis='rows')) if n > 0]]
+    df = df.iloc[:,[i for i, n in enumerate(np.var(df.isnull(), axis='rows')) if n > 0]]
 
     # Create and mask the correlation matrix.
     corr_mat = df.isnull().corr()
