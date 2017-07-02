@@ -201,7 +201,7 @@ def matrix(df,
     if freq:
         ts_list = []
 
-        if type(df.index) == pd.tseries.period.PeriodIndex:
+        if type(df.index) == pd.PeriodIndex:
             ts_array = pd.date_range(df.index.to_timestamp().date[0],
                                      df.index.to_timestamp().date[-1],
                                      freq=freq).values
