@@ -204,7 +204,7 @@ want: either `filter=top` or `filter=bottom`. The `n` parameter controls the max
 
 For example, the following query filtered down to only at most 15 columns which are not completely filled.
 
-    >>> filtered_data = msno.nullity_filter(dat, filter='bottom', n=15, p=0.999) # or filter='top'
+    >>> filtered_data = msno.nullity_filter(data, filter='bottom', n=15, p=0.999) # or filter='top'
     >>> msno.matrix(filtered_data.sample(250))
 
 ![alt text][matrix_filtered]
