@@ -80,8 +80,7 @@ You can switch to a logarithmic scale by specifying `log=True`:
 
 ### Heatmap
 
-The missingno correlation heatmap lets you measure how strongly the presence of one variable positively or negatively
-affect the presence of another:
+The `missingno` correlation heatmap measures nullity correlation: how strongly the presence or absence of one variable affects the presence of another:
 
     >>> msno.heatmap(collisions)
 
@@ -89,22 +88,21 @@ affect the presence of another:
 
 [heatmap]: http://i.imgur.com/ESsZRlY.png
 
-Hmm. It seems that reports which are filed with an `OFF STREET NAME` variable are less likely to have complete
+In this example, it seems that reports which are filed with an `OFF STREET NAME` variable are less likely to have complete
 geographic data.
 
 Nullity correlation ranges from `-1` (if one variable appears the other definitely does not) to `0` (variables appearing
 or not appearing have no effect on one another) to `1` (if one variable appears the other definitely also does).
+
+Variables that are always full or always empty have no meaningful correlation, and so are silently removed from the visualization&mdash;in this case for instance the datetime and injury number columns, which are completely filled, are not included.
+
 Entries marked `<1` or `>-1` are have a correlation that is close to being exactingly negative or positive, but is
 still not quite perfectly so. This points to a small number of records in the dataset which are erroneous. For
 example, in this dataset the correlation between `VEHICLE CODE TYPE 3` and `CONTRIBUTING FACTOR VEHICLE 3` is `<1`,
 indicating that, contrary to our expectation, there are a few records which have one or the other, but not both.
 These cases will require special attention.
 
-Note that variables with a variance of zero (that is, variables which are always full or always empty) have no
-meaningful correlation and so are silently removed from the visualization&mdash;in this case for instance the
-datetime and injury number columns, which are completely filled, are not included.
-
-The heatmap works great for picking out data completeness relationships between variable pairs, but its visual power
+The heatmap works great for picking out data completeness relationships between variable pairs, but its explanatory power
 is limited when it comes to larger relationships and it has no particular support for extremely large datasets.
 
 
