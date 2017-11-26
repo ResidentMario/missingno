@@ -7,7 +7,7 @@ import seaborn as sns
 import pandas as pd
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-__version__ = "0.3.5"
+__version__ = "0.3.8"
 
 
 def _ascending_sort(df):
@@ -211,7 +211,7 @@ def matrix(df,
                                      freq=freq).map(lambda t:
                                                     t.strftime('%Y-%m-%d'))
 
-        elif type(df.index) == pd.tseries.index.DatetimeIndex:
+        elif type(df.index) == pd.DatetimeIndex:
             ts_array = pd.date_range(df.index.date[0], df.index.date[-1],
                                      freq=freq).values
 
