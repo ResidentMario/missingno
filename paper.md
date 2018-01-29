@@ -10,20 +10,33 @@ authors:
 affiliations:
  - name: Independent
    index: 1
-date: 27 October 2017
+date: 28 January 2018
 bibliography: paper.bib
 ---
 
 # Summary
 
-- missingno is a Python package providing a suite of tools for visualizing and 
-understanding missing data in a dataset.
-- This software is intended to be used for quickly and easily understanding the pattern of
-missing entries in a dataset. This makes it useful and applicable to a wide variety of 
-problem domains, as datasets are rarely clean enough to not need at least some validating.
-- The package is hosted [on GitHub](https://github.com/ResidentMario/missingno).
-- I initialized this request due to an email inquiry asking me how best to cite this software
-in an academic paper.
+Algorithmic models and outputs are only as good as the data they are computed on. As the popular saying goes: garbage 
+in, garbage out. In tabular datasets, it is usually relatively easily to, at a glance, understanding patterns of 
+missing data (or nullity) of individual rows, columns, and entries. However, it is far harder to see patterns in the
+missingness of data that extend between them. Understanding such patterns in data is benefitial, if not outright 
+critical, to most applications.
+
+missingno is a Python package for visualizing missing data. It works by converting tabular data matrices into boolean 
+masks based on whether individual entries contain data (which evaluates to true) or left empty (which evaluates to 
+false). This "nullity matrix" is then exposed to user assessment through a variety of special-purpose data 
+visualizations. The simplest tools, the bar chart and matrix display, are literal translations of a data table's 
+nullity matrix, and are effective for snapshotting general patterns. A heatmap provides an methodology for examining
+relationships within pairs of variables. Higher-cardinality data nullity correlations can be understood using a 
+hierarchically clustered dendrogram. Finally, geospatial data dependencies are viewable using an approach based on 
+the quadtree or convex hull algorithm.
+
+The visualizations are consciously designed to be as effective as possible
+at uncovering missing data patterns both between columns of data, and hence, to help its users build more effective 
+data models and pipelines. At the same time the package is designed to be easy to use. The underlying packages involved 
+(numpy, pandas, scipy, matplotlib, and seaborn) are familiar parts of the core scientific Python ecosystem, and 
+hence very learnable and extensible. missingno works "out of the box" with a variety of data types and formats, and 
+provides an extremely compact API.
 
 # References
   

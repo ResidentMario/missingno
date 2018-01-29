@@ -190,7 +190,13 @@ projection&mdash;that is, none at all. Not pretty, but functional.
 * `geoplot` requires the [`shapely`](https://github.com/Toblerity/Shapely) and [`descartes`](https://pypi.python.org/pypi/descartes) libraries, which are
 ancillary to the rest of this package and are thus optional dependencies.
 
-## Sorting and filtering
+That concludes our tour of `missingno`!
+
+For further details take a look at [this blog post](http://www.residentmar.io/2016/06/12/null-and-missing-data-python.html).
+
+## Other
+
+### Sorting and filtering
 
 `missingno` also provides utility functions for filtering records in your dataset based on completion. These are
 useful in particular for filtering through and drilling down into particularly large datasets whose data nullity
@@ -226,9 +232,8 @@ These methods work inline within the visualization methods themselves. For insta
 
     >>> msno.matrix(data.sample(250), filter='top', n=5, p=0.9, sort='ascending')
 
-## Visual configuration
-
-### Lesser parameters
+### Visual configuration
+#### Lesser parameters
 
 Each of the visualizations provides a further set of lesser configuration parameters for visually tweaking the display.
 
@@ -274,7 +279,7 @@ of the dendrogram. Defaults to `top` if `<=50` columns and
 display is used. Defaults to `min([50, 0.05*len(df)])`.
 * `histogram`: Whether or not to plot the histogram. Defaults to `False`.
 
-### Advanced configuration
+#### Advanced configuration
 If you are not satisfied with these admittedly basic configuration parameters, the display can be further manipulated
 in any way you like using `matplotlib` post-facto.
 
@@ -295,13 +300,10 @@ Note that this may not be as well-behaved as I would like it to be. I'm still te
 any issues be sure to [file them]((https://github.com/ResidentMario/missingno/issues)).
 -->
 
-## Further reading
-* The way that `numpy` and `pandas` represent null data informs how one goes about working with such data in Python. It's an interesting subject and an important design limitation that's good keep in mind in your work higher up the stack, so I wrote [an exploratory blog post on the subject](http://www.residentmar.io/2016/06/12/null-and-missing-data-python.html) that's well worth reading if you're into this sort of thing.
-* For public reviews and third-party test drives of this library's capacities check out [this post](http://www.ultravioletanalytics.com/2016/05/20/investigating-missing-data-with-missingno/) and [this one](https://blog.modeanalytics.com/python-data-visualization-libraries/).
-* For slightly more details on this module's ideation check out [this post on my personal blog](http://www.residentmar.io/2016/03/28/missingno.html).
-
 ## Contributing
 
-Bugs? Thoughts? Feature requests? [Throw them at the bug tracker and I'll take a look](https://github.com/ResidentMario/missingno/issues).
+For thoughts on features or bug reports see the [bug tracker](https://github.com/ResidentMario/missingno/issues). If 
+you're interested in contributing to this library, see details on doing so in the `CONTRIBUTING.md` file in this 
+repository.
 
-As always I'm very interested in hearing feedback&mdash;reach out to me at `aleksey@residentmar.io`.
+I'm keen in hearing feedback&mdash;reach out to me at `aleksey@residentmar.io` if you have it.
