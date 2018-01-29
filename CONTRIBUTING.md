@@ -27,7 +27,7 @@ This will create an [editable install](https://pip.pypa.io/en/latest/reference/p
 ### Testing
 
 `missingno` is a data visualization package, and test suites for data visualization in Python are still rather 
-finicky. An explicit test suite (likely using [`pytest-mpl`](https://github.com/matplotlib/pytest-mpl))is still a TODO.
+finicky. An explicit test suite (likely using [`pytest-mpl`](https://github.com/matplotlib/pytest-mpl)) is still a TODO.
 
 ## Documentation
 
