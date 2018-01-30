@@ -41,3 +41,6 @@ pip-delete-this-directory.txt
 missingno.ipynb
 *.ipynb
 _map.html
+
+# Test cache
+.cache

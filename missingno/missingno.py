@@ -250,7 +250,6 @@ def matrix(df,
         # Set up the sparkline.
         ax1.grid(b=False)
         ax1.set_aspect('auto')
-        # set_facecolor in mpl >= 2.0.0, set_axis_bgcolor in mpl < 2.0.0
         # GH 25
         if int(mpl.__version__[0]) <= 1:
             ax1.set_axis_bgcolor((1, 1, 1))
@@ -432,9 +431,6 @@ def heatmap(df, inline=True,
     # corr_mat[np.isnan(corr_mat)] = 0
     mask = np.zeros_like(corr_mat)
     mask[np.triu_indices_from(mask)] = True
-
-    # Set fontsize.
-    # fontsize = _set_font_size(fig, df, fontsize)
 
     # Construct the base heatmap.
     if labels:
@@ -663,7 +659,6 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
     # Set the cutoff variable.
     if cutoff is None: cutoff = np.min([50, 0.05 * len(df)])
 
-    # fig, ax = plt.subplots()
     fig = plt.figure(figsize=figsize)
     ax = plt.subplot(111)
 
@@ -796,7 +791,6 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
         sns.distplot(pd.Series(nonnan_nullities), ax=cax, color=list(np.average(colors, axis=0)))
 
         cax.grid(b=False)
-        # cax.get_xaxis().set_visible(False)
         cax.get_yaxis().set_visible(False)
         cax.patch.set_visible(False)
         cax.xaxis.set_ticks_position('none')
@@ -808,7 +802,6 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
         cax.patch.set_visible(False)
         cax.tick_params(labelsize=fontsize)
 
-    # Display.
     # Display.
     if inline:
         plt.show()
