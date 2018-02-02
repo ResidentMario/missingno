@@ -6,24 +6,9 @@ from scipy.cluster import hierarchy
 import seaborn as sns
 import pandas as pd
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import warnings
 
 __version__ = "0.3.8"
-
-
-def _ascending_sort(df):
-    """
-    Helper method for sorting.
-    Returns a DataFrame whose values have been rearranged by ascending completeness.
-    """
-    return df.iloc[np.argsort(df.count(axis='columns').values), :]
-
-
-def _descending_sort(df):
-    """
-    Helper method for sorting.
-    Returns a DataFrame whose values have been rearranged by descending completeness.
-    """
-    return df.iloc[np.flipud(np.argsort(df.count(axis='columns').values)), :]
 
 
 def nullity_sort(df, sort=None):
@@ -34,44 +19,12 @@ def nullity_sort(df, sort=None):
     :param sort: The sorting method: either "ascending", "descending", or None (default).
     :return: The nullity-sorted DataFrame.
     """
-    _df = df
     if sort == "ascending":
-        _df = _ascending_sort(df)
+        return df.iloc[np.argsort(df.count(axis='columns').values), :]
     elif sort == "descending":
-        _df = _descending_sort(df)
-    return _df
-
-
-def _n_top_complete_filter(df, n):
-    """
-    Helper method for filtering a DataFrame.
-    Returns the top n most populated entry columns.
-    """
-    return df.iloc[:, np.sort(np.argsort(df.count(axis='rows').values)[-n:])]
-
-
-def _n_bottom_complete_filter(df, n):
-    """
-    Helper method for filtering a DataFrame.
-    Returns the bottom n least populated entry columns.
-    """
-    return df.iloc[:, np.sort(np.argsort(df.count(axis='rows').values)[:n])]
-
-
-def _p_top_complete_filter(df, p):
-    """
-    Helper method for filtering a DataFrame.
-    Returns the entry columns which are at least p*100 percent completeness.
-    """
-    return df.iloc[:, [c >= p for c in df.count(axis='rows').values / len(df)]]
-
-
-def _p_bottom_complete_filter(df, p):
-    """
-    Helper method for filtering a DataFrame.
-    Returns the entry columns which are at most p*100 percent completeness.
-    """
-    return df.iloc[:, [c <= p for c in df.count(axis='rows').values / len(df)]]
+        return df.iloc[np.flipud(np.argsort(df.count(axis='columns').values)), :]
+    else:
+        return df
 
 
 def nullity_filter(df, filter=None, p=0, n=0):
@@ -90,18 +43,17 @@ def nullity_filter(df, filter=None, p=0, n=0):
     :param n: A numerical cut-off. If non-zero no more than this number of columns will be returned.
     :return: The nullity-filtered `DataFrame`.
     """
-    _df = df
     if filter == "top":
         if p:
-            _df = _p_top_complete_filter(_df, p)
+            df = df.iloc[:, [c >= p for c in df.count(axis='rows').values / len(df)]]
         if n:
-            _df = _n_top_complete_filter(_df, n)
+            df = df.iloc[:, np.sort(np.argsort(df.count(axis='rows').values)[-n:])]
     elif filter == "bottom":
         if p:
-            _df = _p_bottom_complete_filter(_df, p)
+            df = df.iloc[:, [c <= p for c in df.count(axis='rows').values / len(df)]]
         if n:
-            _df = _n_bottom_complete_filter(_df, n)
-    return _df
+            df = df.iloc[:, np.sort(np.argsort(df.count(axis='rows').values)[:n])]
+    return df
 
 
 def matrix(df,
