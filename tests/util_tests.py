@@ -1,5 +1,5 @@
 """
-`gtfs-tripify` utilities test module. Asserts that utility functions are correct.
+Utilities test module. Asserts that utility functions are correct.
 """
 
 import unittest
