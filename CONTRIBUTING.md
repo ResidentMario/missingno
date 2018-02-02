@@ -24,10 +24,22 @@ ready, I recommend running `pip install -e missingno .` from the root folder of 
 This will create an [editable install](https://pip.pypa.io/en/latest/reference/pip_install/#editable-installs) of 
 `missingno` suitable for tweaking and further development.
 
+In addition to the `missingno` prerequisites, you will also need to have the `pytest` and `pytest-mpl` packages 
+installed. These can be easily installed via `pip`.
+
 ### Testing
 
-`missingno` is a data visualization package, and test suites for data visualization in Python are still rather 
-finicky. An explicit test suite (likely using [`pytest-mpl`](https://github.com/matplotlib/pytest-mpl)) is still a TODO.
+Tests are split between visualization tests for core package methods and utility tests for helper functions.
+
+The visualization tests are under `tests/viz_tests.py`, and rely on `pytest` and the 
+[`pytest-mpl`](https://github.com/matplotlib/pytest-mpl) plugin. Before 
+running the tests, generate the set of baseline images with `py.test --mpl-generate-path=baseline viz_tests.py`. You 
+will want to inspect the images you generate in order to ascertain that they look correct. If you are satisfied that 
+they are, you can rerun the test at anytime by calling `py.test --mpl viz_tests.py`. For more information on how this
+works, refer to the [pytest-mpl README](https://github.com/matplotlib/pytest-mpl).
+
+The utility tests are located under `tests/util_tests.py`. These are not visualization tests, and so can be run with 
+`pytest util_tests.py`.
 
 ## Documentation
 
