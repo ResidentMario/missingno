@@ -6,9 +6,6 @@ from scipy.cluster import hierarchy
 import seaborn as sns
 import pandas as pd
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-import warnings
-
-__version__ = "0.3.8"
 
 
 def nullity_sort(df, sort=None):
@@ -19,9 +16,9 @@ def nullity_sort(df, sort=None):
     :param sort: The sorting method: either "ascending", "descending", or None (default).
     :return: The nullity-sorted DataFrame.
     """
-    if sort == "ascending":
+    if sort == '"ascending':
         return df.iloc[np.argsort(df.count(axis='columns').values), :]
-    elif sort == "descending":
+    elif sort == 'descending':
         return df.iloc[np.flipud(np.argsort(df.count(axis='columns').values)), :]
     else:
         return df
@@ -43,12 +40,12 @@ def nullity_filter(df, filter=None, p=0, n=0):
     :param n: A numerical cut-off. If non-zero no more than this number of columns will be returned.
     :return: The nullity-filtered `DataFrame`.
     """
-    if filter == "top":
+    if filter == 'top':
         if p:
             df = df.iloc[:, [c >= p for c in df.count(axis='rows').values / len(df)]]
         if n:
             df = df.iloc[:, np.sort(np.argsort(df.count(axis='rows').values)[-n:])]
-    elif filter == "bottom":
+    elif filter == 'bottom':
         if p:
             df = df.iloc[:, [c <= p for c in df.count(axis='rows').values / len(df)]]
         if n:
@@ -94,27 +91,20 @@ def matrix(df,
     :param color: The color of the filled columns. Default is a medium dark gray: the RGB multiple `(0.25, 0.25, 0.25)`.
     :return: If `inline` is True, the underlying `matplotlib.figure` object. Else, nothing.
     """
-
-    # Apply filters and sorts.
     df = nullity_filter(df, filter=filter, n=n, p=p)
     df = nullity_sort(df, sort=sort)
 
     height = df.shape[0]
     width = df.shape[1]
 
-    # z is the color-mask array.
+    # z is the color-mask array, g is a NxNx3 matrix. Apply the z color-mask to set the RGB of each pixel.
     z = df.notnull().values
-
-    # g is a NxNx3 matrix
     g = np.zeros((height, width, 3))
 
-    # Apply the z color-mask to set the RGB of each pixel.
     g[z < 0.5] = [1, 1, 1]
     g[z > 0.5] = color
 
-    # Set up the matplotlib grid layout.
-    # If the sparkline is removed the layout is a unary subplot.
-    # If the sparkline is included the layout is a left-right subplot.
+    # Set up the matplotlib grid layout. A unary subplot if no sparkline, a left-right splot if yes sparkline.
     fig = plt.figure(figsize=figsize)
     if sparkline:
         gs = gridspec.GridSpec(1, 2, width_ratios=width_ratios)
@@ -138,9 +128,8 @@ def matrix(df,
     ax0.spines['bottom'].set_visible(False)
     ax0.spines['left'].set_visible(False)
 
-    # Set up and rotate the column ticks.
-    # The labels argument is set to None by default. If the user specifies it in the argument,
-    # respect that specification. Otherwise display for <= 50 columns and do not display for > 50.
+    # Set up and rotate the column ticks. The labels argument is set to None by default. If the user specifies it in
+    # the argument, respect that specification. Otherwise display for <= 50 columns and do not display for > 50.
     if labels or (labels is None and len(df.columns) <= 50):
         ha = 'left'
         ax0.set_xticks(list(range(0, width)))
@@ -148,8 +137,7 @@ def matrix(df,
     else:
         ax0.set_xticks([])
 
-    # Adds Timestamps ticks if freq is not None,
-    # else sets up the two top-bottom row ticks.
+    # Adds Timestamps ticks if freq is not None, else set up the two top-bottom row ticks.
     if freq:
         ts_list = []
 
@@ -171,12 +159,12 @@ def matrix(df,
                                      freq=freq).map(lambda t:
                                                     t.strftime('%Y-%m-%d'))
         else:
-            raise KeyError("Dataframe index must be PeriodIndex or DatetimeIndex.")
+            raise KeyError('Dataframe index must be PeriodIndex or DatetimeIndex.')
         try:
             for value in ts_array:
                 ts_list.append(df.index.get_loc(value))
         except KeyError:
-            raise KeyError("Could not divide time index into desired frequency.")
+            raise KeyError('Could not divide time index into desired frequency.')
 
         ax0.set_yticks(ts_list)
         ax0.set_yticklabels(ts_ticks, fontsize=20, rotation=0)
@@ -199,7 +187,7 @@ def matrix(df,
         min_completeness_index = y_range.index(min_completeness)
         max_completeness_index = y_range.index(max_completeness)
 
-        # Set up the sparkline.
+        # Set up the sparkline, remove the border element.
         ax1.grid(b=False)
         ax1.set_aspect('auto')
         # GH 25
@@ -207,12 +195,10 @@ def matrix(df,
             ax1.set_axis_bgcolor((1, 1, 1))
         else:
             ax1.set_facecolor((1, 1, 1))
-        # Remove the black border.
         ax1.spines['top'].set_visible(False)
         ax1.spines['right'].set_visible(False)
         ax1.spines['bottom'].set_visible(False)
         ax1.spines['left'].set_visible(False)
-        # Set y-margin to 0.
         ax1.set_ymargin(0)
 
         # Plot sparkline---plot is sideways so the x and y axis are reversed.
@@ -236,7 +222,7 @@ def matrix(df,
             ax1.set_xticks([])
             ax1.set_yticks([])
 
-        # Add maximum and minimum labels.
+        # Add maximum and minimum labels, circles.
         ax1.annotate(max_completeness,
                      xy=(max_completeness, max_completeness_index),
                      xytext=(max_completeness + 2, max_completeness_index),
@@ -250,7 +236,6 @@ def matrix(df,
                      va='center',
                      ha='right')
 
-        # Add maximum and minimum circles.
         ax1.set_xlim([min_completeness - 2, max_completeness + 2])  # Otherwise the circles are cut off.
         ax1.plot([min_completeness], [min_completeness_index], '.', color=color, markersize=10.0)
         ax1.plot([max_completeness], [max_completeness_index], '.', color=color, markersize=10.0)
@@ -258,7 +243,6 @@ def matrix(df,
         # Remove tick mark (only works after plotting).
         ax1.xaxis.set_ticks_position('none')
 
-    # Plot if inline, return the figure if not.
     if inline:
         plt.show()
     else:
@@ -288,18 +272,12 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color=(0.25, 
     :param color: The color of the filled columns. Default is a medium dark gray: the RGB multiple `(0.25, 0.25, 0.25)`.
     :return: If `inline` is True, the underlying `matplotlib.figure` object. Else, nothing.
     """
-    # Get counts.
     nullity_counts = len(df) - df.isnull().sum()
-
-    # Apply filters and sorts.
     df = nullity_filter(df, filter=filter, n=n, p=p)
     df = nullity_sort(df, sort=sort)
 
-    # Create the basic plot.
     fig = plt.figure(figsize=figsize)
     (nullity_counts / len(df)).plot(kind='bar', figsize=figsize, fontsize=fontsize, color=color, log=log)
-
-    # Get current axis.
     ax1 = plt.gca()
 
     # Start appending elements, starting with a modified bottom x axis.
@@ -309,16 +287,12 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color=(0.25, 
         # Create the numerical ticks.
         ax2 = ax1.twinx()
         if not log:
-            # Simple if the plot is ordinary.
             ax2.set_yticks(ax1.get_yticks())
             ax2.set_yticklabels([int(n*len(df)) for n in ax1.get_yticks()], fontsize=fontsize)
         else:
             # For some reason when a logarithmic plot is specified `ax1` always contains two more ticks than actually
-            # appears in the plot. For example, if we do `msno.histogram(collisions.sample(500), log=True)` the contents
-            # of the naive `ax1.get_yticks()` is [1.00000000e-03, 1.00000000e-02, 1.00000000e-01, 1.00000000e+00,
-            # 1.00000000e+01]. The fix is to ignore the first and last entries.
-            #
-            # Also note that when a log scale is used, we have to make it match the `ax1` layout ourselves.
+            # appears in the plot. The fix is to ignore the first and last entries. Also note that when a log scale
+            # is used, we have to make it match the `ax1` layout ourselves.
             ax2.set_yscale('log')
             ax2.set_ylim(ax1.get_ylim())
             ax2.set_yticks(ax1.get_yticks()[1:-1])
@@ -331,7 +305,6 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color=(0.25, 
     ax3.set_xticklabels(nullity_counts.values, fontsize=fontsize, rotation=45, ha='left')
     ax3.grid(False)
 
-    # Display.
     if inline:
         plt.show()
     else:
@@ -365,29 +338,25 @@ def heatmap(df, inline=True,
     return its figure.
     :return: If `inline` is True, the underlying `matplotlib.figure` object. Else, nothing.
     """
-    # Apply filters and sorts.
+    # Apply filters and sorts, set up the figure.
     df = nullity_filter(df, filter=filter, n=n, p=p)
     df = nullity_sort(df, sort=sort)
 
-    # Set up the figure.
     fig = plt.figure(figsize=figsize)
     gs = gridspec.GridSpec(1, 1)
     ax0 = plt.subplot(gs[0])
 
-    # Pre-processing: remove completely filled or completely empty variables.
+    # Remove completely filled or completely empty variables.
     df = df.iloc[:,[i for i, n in enumerate(np.var(df.isnull(), axis='rows')) if n > 0]]
 
-    # Create and mask the correlation matrix.
+    # Create and mask the correlation matrix. Construct the base heatmap.
     corr_mat = df.isnull().corr()
-    # corr_mat = corr_mat.replace(np.nan, 1)
-    # corr_mat[np.isnan(corr_mat)] = 0
     mask = np.zeros_like(corr_mat)
     mask[np.triu_indices_from(mask)] = True
 
-    # Construct the base heatmap.
     if labels:
         sns.heatmap(corr_mat, mask=mask, cmap=cmap, ax=ax0, cbar=False,
-                    annot=True, annot_kws={"size": fontsize - 2})
+                    annot=True, annot_kws={'size': fontsize - 2})
     else:
         sns.heatmap(corr_mat, mask=mask, cmap=cmap, ax=ax0, cbar=False)
 
@@ -399,19 +368,18 @@ def heatmap(df, inline=True,
     ax0.xaxis.tick_top()
     ax0.patch.set_visible(False)
 
-    # Fix up annotation label rendering.
     for text in ax0.texts:
         t = float(text.get_text())
         if 0.95 <= t < 1:
-            text.set_text("<1")
+            text.set_text('<1')
         elif -1 < t <= -0.95:
-            text.set_text(">-1")
+            text.set_text('>-1')
         elif t == 1:
-            text.set_text("1")
+            text.set_text('1')
         elif t == -1:
-            text.set_text("-1")
+            text.set_text('-1')
         elif -0.05 < t < 0.05:
-            text.set_text("")
+            text.set_text('')
         else:
             text.set_text(round(t, 1))
 
@@ -452,34 +420,29 @@ def dendrogram(df, method='average',
     return its figure.
     :return: If `inline` is True, the underlying `matplotlib.figure` object. Else, nothing.
     """
-    # Figure out the appropriate figsize.
     if not figsize:
         if len(df.columns) <= 50 or orientation == 'top' or orientation == 'bottom':
             figsize = (25, 10)
         else:
             figsize = (25, (25 + len(df.columns) - 50)*0.5)
     
-    # Set up the figure.
     fig = plt.figure(figsize=figsize)
     gs = gridspec.GridSpec(1, 1)
     ax0 = plt.subplot(gs[0])
 
-    # Apply filters and sorts.
     df = nullity_filter(df, filter=filter, n=n, p=p)
     df = nullity_sort(df, sort=sort)
 
-    # Link the hierarchical output matrix.
+    # Link the hierarchical output matrix, figure out orientation, construct base dendrogram.
     x = np.transpose(df.isnull().astype(int).values)
     z = hierarchy.linkage(x, method)
 
-    # Figure out orientation.
     if not orientation:
         if len(df.columns) > 50:
             orientation = 'left'
         else:
             orientation = 'bottom'
 
-    # Construct the base dendrogram.
     ret = hierarchy.dendrogram(z,
                                orientation=orientation,
                                labels=df.columns.tolist(),
@@ -502,7 +465,7 @@ def dendrogram(df, method='average',
     ax0.spines['left'].set_visible(False)
     ax0.patch.set_visible(False)
 
-    # Set up the categorical axis labels.
+    # Set up the categorical axis labels and draw.
     if orientation == 'bottom':
         ax0.set_xticklabels(ax0.xaxis.get_majorticklabels(), rotation=45, ha='left')
     elif orientation == 'top':
@@ -606,7 +569,7 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
             df['__x'] = coord_col[:, 0]
             df['__y'] = coord_col[:, 1]
     else:
-        raise IndexError("x AND y OR coordinates parameters expected.")
+        raise IndexError('x AND y OR coordinates parameters expected.')
 
     # Set the cutoff variable.
     if cutoff is None: cutoff = np.min([50, 0.05 * len(df)])
@@ -654,11 +617,10 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
                     polygons = [geom]
                 nullity_dict[identifier] = {'nullity': geographic_nullity, 'shapes': polygons}
 
-        # Prepare a colormap.
+        # Prepare a colormap, then draw.
         nullities = [nullity_dict[key]['nullity'] for key in nullity_dict.keys()]
         colors = matplotlib.cm.YlOrRd(plt.Normalize(0, 1)(nullities))
 
-        # Now we draw.
         for i, polygons in enumerate([(nullity_dict[key]['shapes']) for key in nullity_dict.keys()]):
             for polygon in polygons:
                 ax.add_patch(descartes.PolygonPatch(polygon, fc=colors[i], ec='white', alpha=0.8, zorder=4))
@@ -715,13 +677,12 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
         colors = [cmap(n) if pd.notnull(n) else [1,1,1,1]
                   for n in plt.Normalize(0, 1)(nullities)]
 
-        # Now we draw.
+        # Draw, then remove extraneous plotting elements.
         for i, ((min_x, max_x, min_y, max_y), _) in enumerate(rectangles):
             square = shapely.geometry.Polygon([[min_x, min_y], [max_x, min_y], [max_x, max_y], [min_x, max_y]])
             ax.add_patch(descartes.PolygonPatch(square, fc=colors[i], ec='white', alpha=1, zorder=4))
         ax.axis('equal')
 
-        # Remove extraneous plotting elements.
         ax.grid(b=False)
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
@@ -735,11 +696,10 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
         ax.patch.set_visible(False)
 
     if histogram:
-        # Add a histogram.
         sns.set_style(None)
         nonnan_nullities = [n for n in nullities if pd.notnull(n)]
         divider = make_axes_locatable(ax)
-        cax = divider.append_axes("bottom", size="25%", pad=0.00)
+        cax = divider.append_axes('bottom', size='25%', pad=0.00)
         sns.distplot(pd.Series(nonnan_nullities), ax=cax, color=list(np.average(colors, axis=0)))
 
         cax.grid(b=False)
@@ -754,7 +714,6 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
         cax.patch.set_visible(False)
         cax.tick_params(labelsize=fontsize)
 
-    # Display.
     if inline:
         plt.show()
     else:
