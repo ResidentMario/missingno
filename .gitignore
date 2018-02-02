@@ -45,3 +45,4 @@ _map.html
 # Test cache
 .cache
 .pytest_cache
+tests/baseline/

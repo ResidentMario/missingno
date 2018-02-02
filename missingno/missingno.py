@@ -12,40 +12,27 @@ from .utils import nullity_filter, nullity_sort
 def matrix(df,
            filter=None, n=0, p=0, sort=None,
            figsize=(25, 10), width_ratios=(15, 1), color=(0.25, 0.25, 0.25),
-           fontsize=16, labels=None, sparkline=True, inline=True,
+           fontsize=16, labels=None, sparkline=True, inline=False,
            freq=None):
     """
-    Presents a `matplotlib` matrix visualization of the nullity of the given DataFrame.
+    A matrix visualization of the nullity of the given DataFrame.
 
-    Note that for the default `figsize` 250 is a soft display limit: specifying a number of records greater than
-    approximately this value will cause certain records to show up in the sparkline but not in the matrix, which can
-    be confusing.
+    For optimal performance, please stay within 250 rows and 50 columns.
 
-
-    The default vertical display will fit up to 50 columns. If more than 50 columns are specified and the labels
-    parameter is left unspecified the visualization will automatically drop the labels as they will not be very
-    readable. You can override this behavior using `labels=True` and your own `fontsize` parameter.
-
-    :param df: The DataFrame whose completeness is being nullity matrix mapped.
-    :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default). See
-    `nullity_filter()` for more information.
-    :param n: The cap on the number of columns to include in the filtered DataFrame. See  `nullity_filter()` for
-    more information.
-    :param p: The cap on the percentage fill of the columns in the filtered DataFrame. See  `nullity_filter()` for
-    more information.
-    :param sort: The sort to apply to the heatmap. Should be one of "ascending", "descending", or None. See
-    `nullity_sort()` for more information.
-    :param figsize: The size of the figure to display. This is a `matplotlib` parameter.
-    For the vertical configuration this defaults to (20, 10); the horizontal configuration computes a sliding value
-    by default based on the number of columns that need to be displayed.
-    :param fontsize: The figure's font size. This default to 16.
-    :param labels: Whether or not to display the column names. Would need to be turned off on particularly large
-    displays. Defaults to True.
+    :param df: The `DataFrame` being mapped.
+    :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default).
+    :param n: The max number of columns to include in the filtered DataFrame.
+    :param p: The max percentage fill of the columns in the filtered DataFrame.
+    :param sort: The sort to apply to the heatmap. Should be one of "ascending", "descending", or None (default).
+    :param figsize: The size of the figure to display.
+    :param fontsize: The figure's font size. Default to 16.
+    :param labels: If specified, what labels to sue for the column names. Defaults to the underlying data labels when
+    there are 50 columns or less, and no labels when there are more than 50 columns.
     :param sparkline: Whether or not to display the sparkline. Defaults to True.
-    :param width_ratios: The ratio of the width of the matrix to the width of the sparkline. Defaults to `(15,
-    1)`. Does nothing if `sparkline=False`.
-    :param color: The color of the filled columns. Default is a medium dark gray: the RGB multiple `(0.25, 0.25, 0.25)`.
-    :return: If `inline` is True, the underlying `matplotlib.figure` object. Else, nothing.
+    :param width_ratios: The ratio of the width of the matrix to the width of the sparkline. Defaults to `(15, 1)`.
+    Does nothing if `sparkline=False`.
+    :param color: The color of the filled columns. Default is `(0.25, 0.25, 0.25)`.
+    :return: If `inline` is False, the underlying `matplotlib.figure` object. Else, nothing.
     """
     df = nullity_filter(df, filter=filter, n=n, p=p)
     df = nullity_sort(df, sort=sort)
@@ -205,28 +192,23 @@ def matrix(df,
         return fig
 
 
-def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color=(0.25, 0.25, 0.25), inline=True,
+def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='darkgray', inline=False,
         filter=None, n=0, p=0, sort=None):
     """
-    Plots a bar chart of data nullities by column.
+    A bar chart visualization of the nullity of the given DataFrame.
 
-    :param df: The DataFrame whose completeness is being nullity matrix mapped.
+    :param df: The input DataFrame.
     :param log: Whether or not to display a logorithmic plot. Defaults to False (linear).
-    :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default). See
-    `nullity_filter()` for more information.
-    :param n: The cap on the number of columns to include in the filtered DataFrame. See  `nullity_filter()` for
-    more information.
-    :param p: The cap on the percentage fill of the columns in the filtered DataFrame. See  `nullity_filter()` for
-    more information.
-    :param sort: The sort to apply to the heatmap. Should be one of "ascending", "descending", or None. See
-    `nullity_sort()` for more information.
-    :param figsize: The size of the figure to display. This is a `matplotlib` parameter. Defaults to (24,
-    10).
+    :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default).
+    :param n: The cap on the number of columns to include in the filtered DataFrame.
+    :param p: The cap on the percentage fill of the columns in the filtered DataFrame.
+    :param sort: The sort to apply to the heatmap. Should be one of "ascending", "descending", or None (default).
+    :param figsize: The size of the figure to display.
     :param fontsize: The figure's font size. This default to 16.
     :param labels: Whether or not to display the column names. Would need to be turned off on particularly large
     displays. Defaults to True.
-    :param color: The color of the filled columns. Default is a medium dark gray: the RGB multiple `(0.25, 0.25, 0.25)`.
-    :return: If `inline` is True, the underlying `matplotlib.figure` object. Else, nothing.
+    :param color: The color of the filled columns. Default to the RGB multiple `(0.25, 0.25, 0.25)`.
+    :return: If `inline` is False, the underlying `matplotlib.figure` object. Else, nothing.
     """
     nullity_counts = len(df) - df.isnull().sum()
     df = nullity_filter(df, filter=filter, n=n, p=p)
@@ -251,8 +233,7 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color=(0.25, 
             # is used, we have to make it match the `ax1` layout ourselves.
             ax2.set_yscale('log')
             ax2.set_ylim(ax1.get_ylim())
-            ax2.set_yticks(ax1.get_yticks()[1:-1])
-            ax2.set_yticklabels([int(n*len(df)) for n in ax1.get_yticks()[1:-1]], fontsize=fontsize)
+            ax2.set_yticklabels([int(n*len(df)) for n in ax1.get_yticks()], fontsize=fontsize)
 
     # Create the third axis, which displays columnar totals above the rest of the plot.
     ax3 = ax1.twiny()
@@ -267,7 +248,7 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color=(0.25, 
         return fig
 
 
-def heatmap(df, inline=True,
+def heatmap(df, inline=False,
             filter=None, n=0, p=0, sort=None,
             figsize=(20, 12), fontsize=16, labels=True, cmap='RdBu'
             ):
@@ -292,7 +273,7 @@ def heatmap(df, inline=True,
     :param cmap: What `matplotlib` colormap to use. Defaults to `RdBu`.
     :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
     return its figure.
-    :return: If `inline` is True, the underlying `matplotlib.figure` object. Else, nothing.
+    :return: If `inline` is False, the underlying `matplotlib.figure` object. Else, nothing.
     """
     # Apply filters and sorts, set up the figure.
     df = nullity_filter(df, filter=filter, n=n, p=p)
@@ -348,7 +329,7 @@ def heatmap(df, inline=True,
 def dendrogram(df, method='average',
                filter=None, n=0, p=0, sort=None,
                orientation=None, figsize=None,
-               fontsize=16, inline=True
+               fontsize=16, inline=False
                ):
     """
     Fits a `scipy` hierarchical clustering algorithm to the given DataFrame's variables and visualizes the results as
@@ -374,7 +355,7 @@ def dendrogram(df, method='average',
     columns and left-right if there are more.
     :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
     return its figure.
-    :return: If `inline` is True, the underlying `matplotlib.figure` object. Else, nothing.
+    :return: If `inline` is False, the underlying `matplotlib.figure` object. Else, nothing.
     """
     if not figsize:
         if len(df.columns) <= 50 or orientation == 'top' or orientation == 'bottom':
@@ -457,7 +438,7 @@ def _calculate_geographic_nullity(geo_group, x_col, y_col):
 
 
 def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff=None, histogram=False,
-            figsize=(25, 10), fontsize=8, inline=True):
+            figsize=(25, 10), fontsize=8, inline=False):
     """
     Generates a geographical data nullity heatmap, which shows the distribution of missing data across geographic
     regions. The precise output depends on the inputs provided. In increasing order of usefulness:
@@ -491,7 +472,7 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
     is not specified. Defaults to 8.
     :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
     return its figure.
-    :return: If `inline` is True, the underlying `matplotlib.figure` object. Else, nothing.
+    :return: If `inline` is False, the underlying `matplotlib.figure` object. Else, nothing.
     """
     import shapely.geometry
     import descartes
