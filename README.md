@@ -1,9 +1,8 @@
-# missingno [![PyPi version](https://img.shields.io/pypi/v/missingno.svg)](https://pypi.python.org/pypi/missingno/) ![t](https://img.shields.io/badge/status-stable-green.svg)
+# missingno [![PyPi version](https://img.shields.io/pypi/v/missingno.svg)](https://pypi.python.org/pypi/missingno/) ![t](https://img.shields.io/badge/status-stable-green.svg) [![](https://img.shields.io/github/license/ResidentMario/missingno.svg)](https://github.com/ResidentMario/missingno/blob/master/LICENSE.md)
 
 Messy datasets? Missing values? `missingno` provides a small toolset of flexible and easy-to-use missing data
 visualizations and utilities that allows you to get a quick visual summary of the completeness (or lack thereof) of
-your dataset. It's built using `matplotlib`, so it's fast, and takes any `pandas` `DataFrame` input that you throw at
-it, so it's flexible. Just `pip install missingno` to get started.
+your dataset. Works with Python version 3.4 plus. Just `pip install missingno` to get started.
 
 ## Quickstart
 
