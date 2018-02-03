@@ -244,6 +244,14 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgra
     ax3.set_xticklabels(nullity_counts.values, fontsize=fontsize, rotation=45, ha='left')
     ax3.grid(False)
 
+    for ax in [ax1, ax2, ax3]:
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        ax.xaxis.set_ticks_position('none')
+        ax.yaxis.set_ticks_position('none')
+
     if inline:
         plt.show()
     else:
@@ -303,7 +311,8 @@ def heatmap(df, inline=False,
     ax0.set_xticklabels(ax0.xaxis.get_majorticklabels(), rotation=45, ha='right', fontsize=fontsize)
     ax0.set_yticklabels(ax0.yaxis.get_majorticklabels(), fontsize=fontsize, rotation=0)
     ax0.set_yticklabels(ax0.yaxis.get_majorticklabels(), rotation=0, fontsize=fontsize)
-
+    ax0.xaxis.set_ticks_position('none')
+    ax0.yaxis.set_ticks_position('none')
     ax0.patch.set_visible(False)
 
     for text in ax0.texts:

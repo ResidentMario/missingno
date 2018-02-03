@@ -62,9 +62,6 @@ class TestMatrix(unittest.TestCase):
 
 
 class TestBar(unittest.TestCase):
-    """
-    Bar chart visualizations look very visually different between the savefig backend and the default notebook backend.
-    """
     def setUp(self):
         np.random.seed(42)
         self.simple_df = pd.DataFrame((np.random.random((20, 10)) > 0.5), columns=range(0, 10)).replace(False, np.nan)
