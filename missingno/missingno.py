@@ -189,7 +189,7 @@ def matrix(df,
     if inline:
         plt.show()
     else:
-        return fig
+        return ax0
 
 
 def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgray', inline=False,
@@ -247,7 +247,7 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgra
     if inline:
         plt.show()
     else:
-        return fig
+        return ax1
 
 
 def heatmap(df, inline=False,
@@ -324,7 +324,7 @@ def heatmap(df, inline=False,
     if inline:
         plt.show()
     else:
-        return fig
+        return ax0
 
     
 def dendrogram(df, method='average',
@@ -412,7 +412,7 @@ def dendrogram(df, method='average',
     if inline:
         plt.show()
     else:
-        return fig
+        return ax0
 
 
 def _calculate_geographic_nullity(geo_group, x_col, y_col):
@@ -651,5 +651,5 @@ def geoplot(df, x=None, y=None, coordinates=None, by=None, geometry=None, cutoff
     if inline:
         plt.show()
     else:
-        return fig
+        return ax
 
