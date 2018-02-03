@@ -26,8 +26,8 @@ def matrix(df,
     :param sort: The sort to apply to the heatmap. Should be one of "ascending", "descending", or None (default).
     :param figsize: The size of the figure to display.
     :param fontsize: The figure's font size. Default to 16.
-    :param labels: If specified, what labels to sue for the column names. Defaults to the underlying data labels when
-    there are 50 columns or less, and no labels when there are more than 50 columns.
+    :param labels: Whether or not to display the column names. Defaults to the underlying data labels when there are
+    50 columns or less, and no labels when there are more than 50 columns.
     :param sparkline: Whether or not to display the sparkline. Defaults to True.
     :param width_ratios: The ratio of the width of the matrix to the width of the sparkline. Defaults to `(15, 1)`.
     Does nothing if `sparkline=False`.
@@ -192,7 +192,7 @@ def matrix(df,
         return fig
 
 
-def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='darkgray', inline=False,
+def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgray', inline=False,
         filter=None, n=0, p=0, sort=None):
     """
     A bar chart visualization of the nullity of the given DataFrame.
@@ -215,7 +215,8 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='darkgr
     df = nullity_sort(df, sort=sort)
 
     fig = plt.figure(figsize=figsize)
-    (nullity_counts / len(df)).plot(kind='bar', figsize=figsize, fontsize=fontsize, color=color, log=log)
+    (nullity_counts / len(df)).plot(kind='bar', figsize=figsize, fontsize=fontsize, log=log, color=color)
+    # plt.bar((nullity_counts / len(df)), figsize=figsize, fontsize=fontsize, color=color, log=log)
     ax1 = plt.gca()
 
     # Start appending elements, starting with a modified bottom x axis.
@@ -225,6 +226,7 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='darkgr
         # Create the numerical ticks.
         ax2 = ax1.twinx()
         if not log:
+            ax1.set_ylim([0, 1])
             ax2.set_yticks(ax1.get_yticks())
             ax2.set_yticklabels([int(n*len(df)) for n in ax1.get_yticks()], fontsize=fontsize)
         else:
@@ -256,7 +258,6 @@ def heatmap(df, inline=False,
     Presents a `seaborn` heatmap visualization of nullity correlation in the given DataFrame.
     
     Note that this visualization has no special support for large datasets. For those, try the dendrogram instead.
-    
 
     :param df: The DataFrame whose completeness is being heatmapped.
     :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default). See
@@ -298,11 +299,11 @@ def heatmap(df, inline=False,
         sns.heatmap(corr_mat, mask=mask, cmap=cmap, ax=ax0, cbar=False)
 
     # Apply visual corrections and modifications.
-    ax0.set_xticklabels(ax0.xaxis.get_majorticklabels(), rotation=45, ha='left', fontsize=fontsize)
+    ax0.xaxis.tick_bottom()
+    ax0.set_xticklabels(ax0.xaxis.get_majorticklabels(), rotation=45, ha='right', fontsize=fontsize)
     ax0.set_yticklabels(ax0.yaxis.get_majorticklabels(), fontsize=fontsize, rotation=0)
     ax0.set_yticklabels(ax0.yaxis.get_majorticklabels(), rotation=0, fontsize=fontsize)
 
-    ax0.xaxis.tick_top()
     ax0.patch.set_visible(False)
 
     for text in ax0.texts:
@@ -341,14 +342,10 @@ def dendrogram(df, method='average',
     :param df: The DataFrame whose completeness is being dendrogrammed.
     :param method: The distance measure being used for clustering. This is a parameter that is passed to 
     `scipy.hierarchy`.
-    :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default). See
-    `nullity_filter()` for more information.
-    :param n: The cap on the number of columns to include in the filtered DataFrame. See  `nullity_filter()` for
-    more information.
-    :param p: The cap on the percentage fill of the columns in the filtered DataFrame. See  `nullity_filter()` for
-    more information.
-    :param sort: The sort to apply to the heatmap. Should be one of "ascending", "descending", or None. See
-    `nullity_sort()` for more information.
+    :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default).
+    :param n: The cap on the number of columns to include in the filtered DataFrame.
+    :param p: The cap on the percentage fill of the columns in the filtered DataFrame.
+    :param sort: The sort to apply to the heatmap. Should be one of "ascending", "descending", or None.
     :param figsize: The size of the figure to display. This is a `matplotlib` parameter which defaults to `(25, 10)`.
     :param fontsize: The figure's font size.
     :param orientation: The way the dendrogram is oriented. Defaults to top-down if there are less than or equal to 50
