@@ -68,7 +68,7 @@ using the `freq` keyword parameter:
 
 `msno.bar` is a simple visualization of nullity by column:
 
-    >>> msno.bar(collisions.sample(500))
+    >>> msno.bar(collisions.sample(1000))
 
 ![alt text][bar]
 
