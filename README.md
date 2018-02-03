@@ -34,7 +34,7 @@ The `msno.matrix` nullity matrix is a data-dense display which lets you quickly 
 
 ![alt text][two_hundred_fifty]
 
-[two_hundred_fifty]: http://i.imgur.com/DdepYwr.png
+[two_hundred_fifty]: https://i.imgur.com/gWuXKEr.png
 
 At a glance, date, time, the distribution of injuries, and the contribution factor of the first vehicle appear to be
 completely populated, while geographic information seems mostly complete, but spottier.
@@ -62,7 +62,7 @@ using the `freq` keyword parameter:
 
 ![alt text][ts_matrix]
 
-[ts_matrix]: https://cloud.githubusercontent.com/assets/20803912/19692749/470137bc-9a96-11e6-8708-e4d70b91c597.png
+[ts_matrix]: https://i.imgur.com/VLvWpsV.png
 
 ### Bar Chart
 
@@ -72,7 +72,7 @@ using the `freq` keyword parameter:
 
 ![alt text][bar]
 
-[bar]: http://i.imgur.com/lOTN3tm.png
+[bar]: https://i.imgur.com/2BxEfOr.png
 
 You can switch to a logarithmic scale by specifying `log=True`. `bar` provides the same information as `matrix`, but in 
 a simpler format.
@@ -85,7 +85,7 @@ The `missingno` correlation heatmap measures nullity correlation: how strongly t
 
 ![alt text][heatmap]
 
-[heatmap]: http://i.imgur.com/ESsZRlY.png
+[heatmap]: https://i.imgur.com/JalSKyE.png
 
 In this example, it seems that reports which are filed with an `OFF STREET NAME` variable are less likely to have complete
 geographic data.
@@ -114,7 +114,7 @@ ones visible in the correlation heatmap:
 
 ![alt text][dendrogram]
 
-[dendrogram]: http://i.imgur.com/6ZBC4af.png
+[dendrogram]: https://i.imgur.com/oIiR4ct.png
 
 The dendrogram uses a [hierarchical clustering algorithm](http://docs.scipy.org/doc/scipy/reference/cluster.hierarchy.html)
 (courtesy of `scipy`) to bin variables against one another by their nullity correlation (measured in terms of
