@@ -6,13 +6,21 @@ your dataset. Just `pip install missingno` to get started.
 
 ## Quickstart
 
-Examples use the [NYPD Motor Vehicle Collisions Dataset](https://data.cityofnewyork.us/Public-Safety/NYPD-Motor-Vehicle-Collisions/h9gi-nx95)
-([cleaned up](https://github.com/ResidentMario/motor-vehicle-collisions/blob/master/NYPD%20Motor%20Vehicle%20Collisions.ipynb))
-and the [PLUTO Housing Sales Dataset](http://www1.nyc.gov/site/planning/data-maps/open-data/dwn-pluto-mappluto.page)
- ([cleaned up](https://github.com/ResidentMario/nyc-buildings/blob/master/nyc_building_sales.csv)).
+This quickstart uses a sample of the [NYPD Motor Vehicle Collisions Dataset](https://data.cityofnewyork.us/Public-Safety/NYPD-Motor-Vehicle-Collisions/h9gi-nx95) 
+dataset. To get the data yourself, run the following:
 
+```sh
+$ pip install quilt
+$ quilt install ResidentMario/missingno_data
+```
 
-In the following walkthrough I take **nullity** to mean whether a particular variable is filled in or not.
+Then to load the data into memory:
+
+    >>> from quilt.data.ResidentMario import missingno_data
+    >>> collisions = missingno_data.nyc_injurious_collisions()
+
+The rest of this walkthrough will draw from this `collisions` dataset. I additionally define **nullity** to mean 
+whether a particular variable is filled in or not.
 
 ### Matrix
 
@@ -36,11 +44,13 @@ rows.
 This visualization will comfortably accommodate up to 50 labelled variables. Past that range labels begin to overlap
 or become unreadable, and by default large displays omit them.
 
+<!--
     >>> msno.matrix(housing.sample(250))
 
 ![alt text][large_matrix]
 
 [large_matrix]: http://i.imgur.com/yITFVju.png
+-->
 
 If you are working with time-series data, you can [specify a periodicity](http://pandas.pydata.org/pandas-docs/stable/timeseries.html#timeseries-offset-aliases)
 using the `freq` keyword parameter:
@@ -53,12 +63,6 @@ using the `freq` keyword parameter:
 
 [ts_matrix]: https://cloud.githubusercontent.com/assets/20803912/19692749/470137bc-9a96-11e6-8708-e4d70b91c597.png
 
-<!--
-You can override this behavior by specifying `labels=True`. In that case you will also want to set your own
-`fontsize` value. These optional parameters are among those covered in more detail in the
-[Visual configuration](#visual-configuration) section.
--->
-
 ### Bar Chart
 
 `msno.bar` is a simple visualization of nullity by column:
@@ -69,13 +73,8 @@ You can override this behavior by specifying `labels=True`. In that case you wil
 
 [bar]: http://i.imgur.com/lOTN3tm.png
 
-You can switch to a logarithmic scale by specifying `log=True`:
-
-![alt text][bar2]
-
-[bar2]: http://i.imgur.com/YZDaAV3.png
-
-`bar` provides the same information as `matrix`, but in a simpler format.
+You can switch to a logarithmic scale by specifying `log=True`. `bar` provides the same information as `matrix`, but in 
+a simpler format.
 
 ### Heatmap
 
@@ -136,12 +135,13 @@ cluster leaf tells you, in absolute terms, how often the records are "mismatched
 As with `matrix`, only up to 50 labeled columns will comfortably display in this configuration. However the
 `dendrogram` more elegantly handles extremely large datasets by simply flipping to a horizontal configuration.
 
+<!--
     >>> msno.dendrogram(housing)
 
 ![alt text][large-dendrogram]
 
 [large-dendrogram]: http://i.imgur.com/HDa06O9.png
-
+-->
 
 ### Geoplot
 
@@ -304,5 +304,3 @@ any issues be sure to [file them]((https://github.com/ResidentMario/missingno/is
 For thoughts on features or bug reports see the [bug tracker](https://github.com/ResidentMario/missingno/issues). If 
 you're interested in contributing to this library, see details on doing so in the `CONTRIBUTING.md` file in this 
 repository.
-
-I'm keen in hearing feedback&mdash;reach out to me at `aleksey@residentmar.io` if you have it.

@@ -41,6 +41,28 @@ works, refer to the [pytest-mpl README](https://github.com/matplotlib/pytest-mpl
 The utility tests are located under `tests/util_tests.py`. These are not visualization tests, and so can be run with 
 `pytest util_tests.py`.
 
+### Data
+
+The `missingno` `README.md` uses a real-world data sample, one originally derived from the 
+[NYPD Motor Vehicle Collisions Dataset](https://data.cityofnewyork.us/Public-Safety/NYPD-Motor-Vehicle-Collisions/h9gi-nx95).
+The data is zipped up and packaged online using [Quilt](https://quiltdata.com/package/ResidentMario/geoplot_data), a 
+data-as-a-package management service. You can view the package [on the web](https://quiltdata.com/package/ResidentMario/missingno_data).
+
+This data is only used in the `README.md`. It is not used for tests. Instructions for reading out the data are in the 
+`README.md`; you can also do the following on your local machine:
+
+```sh
+$ pip install quilt
+$ cd geoplot # root directory of this repo
+$ quilt install # installs dependencies from quilt.yml
+```
+
+To update the data sample, you will need to push to this package, using 
+[the instructions here](https://docs.quiltdata.com/make-a-package.html).
+
+The data itself is a `csv` version of a `geojson` file (less geometry) packaged into the example data used by the 
+`geoplot` package (another project of mine). The master copy is a seperate repository on GitHub: [`missingno-data`](https://github.com/ResidentMario/missingno-data).
+
 ## Documentation
 
 The Quickstart section of `README.md` is the principal documentation for this package. To edit the documentation I 
