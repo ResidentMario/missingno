@@ -7,7 +7,7 @@ your dataset. Just `pip install missingno` to get started.
 ## Quickstart
 
 This quickstart uses a sample of the [NYPD Motor Vehicle Collisions Dataset](https://data.cityofnewyork.us/Public-Safety/NYPD-Motor-Vehicle-Collisions/h9gi-nx95) 
-dataset. To get the data yourself, run the following:
+dataset. To get the data yourself, run the following on your command line:
 
 ```sh
 $ pip install quilt
