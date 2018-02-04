@@ -172,7 +172,6 @@ small datasets like this sample one.
 If you can specify a geographic grouping within the dataset, you can plot your data as a set of minimum-enclosure 
 [convex hulls](https://en.wikipedia.org/wiki/Convex_hull) instead:
 
-    # msno.geoplot will fail if some groups have only one or two values, you must remove these yourself.
     >>> msno.geoplot(collisions, x='LONGITUDE', y='LATITUDE', by='ZIP CODE')
 
 ![alt-text][hull-geoplot]
