@@ -24,8 +24,9 @@ ready, I recommend running `pip install -e missingno .` from the root folder of 
 This will create an [editable install](https://pip.pypa.io/en/latest/reference/pip_install/#editable-installs) of 
 `missingno` suitable for tweaking and further development.
 
-In addition to the `missingno` prerequisites, you will also need to have the `pytest` and `pytest-mpl` packages 
-installed. These can be easily installed via `pip`.
+In addition to the `missingno` prerequisites, you will also need to have the `geopandas`, `geoplot`, and `shapely` 
+optional dependencies installed (`geoplot` can only be installed via `conda`). To run the tests you will also need to 
+have the `pytest` and `pytest-mpl` packages installed.
 
 ### Testing
 
