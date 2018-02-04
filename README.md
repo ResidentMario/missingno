@@ -146,53 +146,49 @@ As with `matrix`, only up to 50 labeled columns will comfortably display in this
 
 ### Geoplot
 
-One kind of pattern that's particularly difficult to check, where it appears, is geographic distribution. The geoplot
- makes this easy:
+One kind of pattern that's particularly difficult to check, where it appears, is geographic distribution. `missingno`
+supports visualizing geospatial data nullity patterns with a geoplot visualization. This is an experimental data 
+visualization type, and requires the [`geoplot`](https://github.com/ResidentMario/geoplot) and [`geopandas`](http://geopandas.org/) 
+libraries. These are optional dependencies are must be installed separately from the rest of `missingno`. Once you 
+have them you can run:
 
-    >>> msno.geoplot(collisions.sample(100000), x='LONGITUDE', y='LATITUDE')
+    >>> msno.geoplot(collisions, x='LONGITUDE', y='LATITUDE')
 
 ![alt-text][large-geoplot]
 
-[large-geoplot]: http://i.imgur.com/4dtGhig.png
+[large-geoplot]: https://i.imgur.com/glZonpD.png
 
-If no geographical context can be provided, `geoplot` can be used to compute a
+If no geographical context can be provided, `geoplot` will compute a
 [quadtree](https://en.wikipedia.org/wiki/Quadtree) nullity distribution, as above, which splits the dataset into
 statistically significant chunks and colorizes them based on the average nullity of data points within them. In this
-case (fortunately for analysis, but unfortunately for the purposes of demonstration) it appears that our dataset's
-data nullity is unaffected by geography.
+case there is good evidence that the distribution of data nullity is mostly random: the number of values left blank 
+varies across the space by only 5 percent, and the differences look randomly distributed.
 
-A quadtree analysis works remarkably well in most cases, but will not always be what you want. If you can specify a
-geographic grouping within the dataset (using the `by` keyword argument), you can plot your data as a set of
-minimum-enclosure [convex hulls](https://en.wikipedia.org/wiki/Convex_hull) instead (the following example also
-demonstrates adding a histogram to the display, using the `histogram=True` argument):
+Quadtrees have the advantage that they don't require any information about the space besides latitude/longitude 
+pairs. Given enough data (hundreds of thousands of records), 
+[a geoplot can even reconstruct the space being mapped](https://i.imgur.com/4dtGhig.png). It works less well for 
+small datasets like this sample one.
 
-    >>> msno.geoplot(collisions.sample(100000), x='LONGITUDE', y='LATITUDE', by='ZIP CODE', histogram=True)
+If you can specify a geographic grouping within the dataset, you can plot your data as a set of minimum-enclosure 
+[convex hulls](https://en.wikipedia.org/wiki/Convex_hull) instead:
+
+    # msno.geoplot will fail if some groups have only one or two values, you must remove these yourself.
+    >>> msno.geoplot(collisions, x='LONGITUDE', y='LATITUDE', by='ZIP CODE')
 
 ![alt-text][hull-geoplot]
 
-[hull-geoplot]: http://i.imgur.com/3kfKMJO.png
+[hull-geoplot]: https://i.imgur.com/RALL9d9.png
 
-Finally, if you have the *actual* geometries of your grouping (in the form of a `dict` or `pandas` `Series` of
-`shapely.Geometry` or `shapely.MultiPolygon` objects), you can dispense with all of this approximation and just plot
-*exactly* what you mean:
+Convex hulls are usually more interpretable than the quadtree, especially when the underlying dataset is relatively 
+small (as this one is). We again see a data nullity distribution that's seemingly at random, giving us confidence 
+that the nullity of collision records is not geographically variable.
 
-    >>> msno.geoplot(collisions.sample(1000), x='LONGITUDE', y='LATITUDE', by='BOROUGH', geometry=geom)
+The `msno.geoplot` chart type extends the `aggplot` function in the `geoplot` package, and accepts keyword arguments 
+to the latter as parameters. [The `geoplot` documentation provides further details](https://residentmario.github.io/geoplot/index.html) 
+(including how to pick [a better map projection](https://i.imgur.com/KSryo6o.png)). For more advanced configuration 
+details for the rest of the plot types, refer to the `CONFIGURATION.md` file in this repository.
 
-![alt-text][true-geoplot]
-
-[true-geoplot]: http://i.imgur.com/fAyxqnk.png
-
-In this case this is the least interesting result of all.
-
-Two technical notes:
-* For the geographically inclined, this a [plat carre](https://en.wikipedia.org/wiki/Equirectangular_projection)
-projection&mdash;that is, none at all. Not pretty, but functional.
-* `geoplot` requires the [`shapely`](https://github.com/Toblerity/Shapely) and [`descartes`](https://pypi.python.org/pypi/descartes) libraries, which are
-ancillary to the rest of this package and are thus optional dependencies.
-
-That concludes our tour of `missingno`.
-
-For more advanced configuration details, refer to the `CONFIGURATION.md` file in this repository.
+That concludes our tour of `missingno`!
 
 ## Contributing
 

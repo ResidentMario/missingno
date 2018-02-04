@@ -6,6 +6,7 @@ from scipy.cluster import hierarchy
 import seaborn as sns
 import pandas as pd
 from .utils import nullity_filter, nullity_sort
+import warnings
 
 
 def matrix(df,
@@ -435,7 +436,7 @@ def _calculate_geographic_nullity(geo_group, x_col, y_col):
     entries = point_groups.size()
     width = len(geo_group.columns)
     # Remove empty (NaN, NaN) points.
-    if len(entries) > 0:  # explicit check to avoid a Runtime Warning
+    if len(entries) > 0:  # explicit check to avoid a RuntimeWarning
         geographic_nullity = np.average(1 - counts / width / entries)
         return points, geographic_nullity
     else:
@@ -444,14 +445,30 @@ def _calculate_geographic_nullity(geo_group, x_col, y_col):
 
 def geoplot(df,
             filter=None, n=0, p=0, sort=None,
-            x=None, y=None, coordinates=None, figsize=(25, 10), inline=False,
-            by=None, cmap='Reds', vmin=0, vmax=1, **kwargs):
+            x=None, y=None, figsize=(25, 10), inline=False,
+            by=None, cmap='YlGn_r', **kwargs):
     """
     Generates a geographical data nullity heatmap, which shows the distribution of missing data across geographic
     regions. The precise output depends on the inputs provided. If no geographical context is provided, a quadtree
     is computed and nullities are rendered as abstract geographic squares. If geographical context is provided in the
     form of a column of geographies (region, borough. ZIP code, etc.) in the `DataFrame`, convex hulls are computed
     for each of the point groups and the heatmap is generated within them.
+
+    :param df: The DataFrame whose completeness is being geoplotted.
+    :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default).
+    :param sort: The sort to apply to the heatmap. Should be one of "ascending", "descending", or None.
+    :param n: The cap on the number of columns to include in the filtered DataFrame.
+    :param p: The cap on the percentage fill of the columns in the filtered DataFrame.
+    :param figsize: The size of the figure to display. This is a `matplotlib` parameter which defaults to `(25, 10)`.
+    :param x: The variable in the dataset containing the x-coordinates of the dataset.
+    :param y: The variable in the dataset containing the y-coordinates of the dataset.
+    :param by: If specified, plot in convex hull mode, using the given column to cluster points in the same area. If
+    not specified, plot in quadtree mode.
+    :param cmap: The colormap to display the data with. Defaults to `YlGn_r`.
+    :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
+    return its figure.
+    :param kwargs: Additional keyword arguments are passed to the underlying `geoplot` function.
+    :return: If `inline` is False, the underlying `matplotlib.figure` object. Else, nothing.
     """
     import geoplot as gplt
     import geopandas as gpd
@@ -461,20 +478,27 @@ def geoplot(df,
     df = nullity_sort(df, sort=sort)
 
     nullity = df.isnull().sum(axis='columns') / df.shape[1]
-    if x and y and not coordinates:
+    if x and y:
         gdf = gpd.GeoDataFrame(nullity, columns=['nullity'],
                                geometry=df.apply(lambda srs: Point(srs[x], srs[y]), axis='columns'))
-    elif coordinates and not x and not y:
-        gdf = gpd.GeoDataFrame(nullity, columns=['nullity'],
-                               geometry=df.apply(lambda srs: Point(*srs[coordinates]), axis='columns'))
     else:
-        raise ValueError("One of 'x' and 'y' OR 'coordinates' must be specified, and they cannot be specified "
-                         "simultaneously.")
+        raise ValueError("The 'x' and 'y' parameters must be specified.")
 
     if by:
+        if df[by].isnull().any():
+            warnings.warn('The "{0}" column included null values. The offending records were dropped'.format(by))
+            df = df.dropna(subset=[by])
+            gdf = gdf.loc[df.index]
+
+        vc = df[by].value_counts()
+        if (vc < 3).any():
+            warnings.warn('Grouping by "{0}" included clusters with fewer than three points, which cannot be made '
+                          'polygonal. The offending records were dropped.'.format(by))
+            where = df[by].isin((df[by].value_counts() > 2).where(lambda b: b).dropna().index.values)
+            gdf = gdf.loc[where]
         gdf[by] = df[by]
 
-    gplt.aggplot(gdf, figsize=figsize, hue='nullity', agg=np.average, cmap=cmap, vmin=vmin, vmax=vmax, by=by, **kwargs)
+    gplt.aggplot(gdf, figsize=figsize, hue='nullity', agg=np.average, cmap=cmap, by=by, edgecolor='None', **kwargs)
     ax = plt.gca()
 
     if inline:
