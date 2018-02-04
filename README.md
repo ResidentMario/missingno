@@ -156,7 +156,7 @@ have them you can run:
 
 ![alt-text][large-geoplot]
 
-[large-geoplot]: https://i.imgur.com/glZonpD.png
+[large-geoplot]: https://i.imgur.com/BJROapk.png
 
 If no geographical context can be provided, `geoplot` will compute a
 [quadtree](https://en.wikipedia.org/wiki/Quadtree) nullity distribution, as above, which splits the dataset into
@@ -177,7 +177,7 @@ If you can specify a geographic grouping within the dataset, you can plot your d
 
 ![alt-text][hull-geoplot]
 
-[hull-geoplot]: https://i.imgur.com/RALL9d9.png
+[hull-geoplot]: https://i.imgur.com/osnPwEE.png
 
 Convex hulls are usually more interpretable than the quadtree, especially when the underlying dataset is relatively 
 small (as this one is). We again see a data nullity distribution that's seemingly at random, giving us confidence 
@@ -185,7 +185,7 @@ that the nullity of collision records is not geographically variable.
 
 The `msno.geoplot` chart type extends the `aggplot` function in the `geoplot` package, and accepts keyword arguments 
 to the latter as parameters. [The `geoplot` documentation provides further details](https://residentmario.github.io/geoplot/index.html) 
-(including how to pick [a better map projection](https://i.imgur.com/KSryo6o.png)). For more advanced configuration 
+(including how to pick [a better map projection](https://i.imgur.com/0aaNa9Q.png)). For more advanced configuration 
 details for the rest of the plot types, refer to the `CONFIGURATION.md` file in this repository.
 
 That concludes our tour of `missingno`!

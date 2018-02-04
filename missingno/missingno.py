@@ -427,7 +427,7 @@ def dendrogram(df, method='average',
 def geoplot(df,
             filter=None, n=0, p=0, sort=None,
             x=None, y=None, figsize=(25, 10), inline=False,
-            by=None, cmap='YlGn_r', **kwargs):
+            by=None, cmap='YlGn', **kwargs):
     """
     Generates a geographical data nullity heatmap, which shows the distribution of missing data across geographic
     regions. The precise output depends on the inputs provided. If no geographical context is provided, a quadtree
@@ -445,7 +445,7 @@ def geoplot(df,
     :param y: The variable in the dataset containing the y-coordinates of the dataset.
     :param by: If specified, plot in convex hull mode, using the given column to cluster points in the same area. If
     not specified, plot in quadtree mode.
-    :param cmap: The colormap to display the data with. Defaults to `YlGn_r`.
+    :param cmap: The colormap to display the data with. Defaults to `YlGn`.
     :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
     return its figure.
     :param kwargs: Additional keyword arguments are passed to the underlying `geoplot` function.
@@ -458,7 +458,7 @@ def geoplot(df,
     df = nullity_filter(df, filter=filter, n=n, p=p)
     df = nullity_sort(df, sort=sort)
 
-    nullity = df.isnull().sum(axis='columns') / df.shape[1]
+    nullity = df.notnull().sum(axis='columns') / df.shape[1]
     if x and y:
         gdf = gpd.GeoDataFrame(nullity, columns=['nullity'],
                                geometry=df.apply(lambda srs: Point(srs[x], srs[y]), axis='columns'))
