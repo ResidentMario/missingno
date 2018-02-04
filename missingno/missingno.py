@@ -424,25 +424,6 @@ def dendrogram(df, method='average',
         return ax0
 
 
-def _calculate_geographic_nullity(geo_group, x_col, y_col):
-    """
-    Helper method which calculates the nullity of a DataFrame. Factored out of and used within `geoplot`.
-    """
-    # Aggregate by point and fetch a list of non-null coordinate pairs, which is returned.
-    point_groups = geo_group.groupby([x_col, y_col])
-    points = [point for point in point_groups.groups.keys() if pd.notnull(point[0]) and pd.notnull(point[1])]
-    # Calculate nullities by location, then take their average within the overall feature.
-    counts = np.sum(point_groups.count().values, axis=1)
-    entries = point_groups.size()
-    width = len(geo_group.columns)
-    # Remove empty (NaN, NaN) points.
-    if len(entries) > 0:  # explicit check to avoid a RuntimeWarning
-        geographic_nullity = np.average(1 - counts / width / entries)
-        return points, geographic_nullity
-    else:
-        return points, np.nan
-
-
 def geoplot(df,
             filter=None, n=0, p=0, sort=None,
             x=None, y=None, figsize=(25, 10), inline=False,
