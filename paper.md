@@ -10,16 +10,16 @@ authors:
 affiliations:
  - name: Independent
    index: 1
-date: 6 Febuary 2018
+date: 13 Febuary 2018
 bibliography: paper.bib
 ---
 
 # Summary
 
 Algorithmic models and outputs are only as good as the data they are computed on. As the popular saying goes: garbage 
-in, garbage out. In tabular datasets, it is usually relatively easily to, at a glance, understand patterns of 
+in, garbage out. In tabular datasets, it is usually relatively easy to, at a glance, understand patterns of 
 missing data (or nullity) of individual rows, columns, and entries. However, it is far harder to see patterns in the
-missingness of data that extend between them. Understanding such patterns in data is benefitial, if not outright 
+missingness of data that extend between them. Understanding such patterns in data is beneficial, if not outright 
 critical, to most applications.
 
 missingno is a Python package for visualizing missing data. It works by converting tabular data matrices into boolean 
@@ -51,7 +51,7 @@ Finally, geospatial data dependencies are viewable using an approach based on th
 The visualizations are consciously designed to be as effective as possible
 at uncovering missing data patterns both between and within columns of data, and hence, to help its users build more 
 effective data models and pipelines. At the same time the package is designed to be easy to use. The underlying 
-packages involved (numpy, pandas, scipy, matplotlib, and seaborn) are familiar parts of the core scientific Python 
+packages involved ([@numpy], [@pandas], [@scipy], [@matplotlib], and [@seaborn]) are familiar parts of the core scientific Python 
 ecosystem, and hence very learnable and extensible. missingno works "out of the box" with a variety of data types and 
 formats, and provides an extremely compact API.
 
