@@ -4,7 +4,7 @@ Messy datasets? Missing values? `missingno` provides a small toolset of flexible
 visualizations and utilities that allows you to get a quick visual summary of the completeness (or lack thereof) of
 your dataset. Just `pip install missingno` to get started.
 
-## Quickstart [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/kevinemoore/missingno.git/master?filepath=QuickStart.ipynb)
+## Quickstart [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/ResidentMario/missingno/master?filepath=QuickStart.ipynb)
 This quickstart uses a sample of the [NYPD Motor Vehicle Collisions Dataset](https://data.cityofnewyork.us/Public-Safety/NYPD-Motor-Vehicle-Collisions/h9gi-nx95) 
 dataset. To get the data yourself, run the following on your command line:
 
