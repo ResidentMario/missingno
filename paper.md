@@ -51,7 +51,7 @@ Finally, geospatial data dependencies are viewable using an approach based on th
 The visualizations are consciously designed to be as effective as possible
 at uncovering missing data patterns both between and within columns of data, and hence, to help its users build more 
 effective data models and pipelines. At the same time the package is designed to be easy to use. The underlying 
-packages involved ([@numpy], [@pandas], [@scipy], [@matplotlib], and [@seaborn]) are familiar parts of the core scientific Python 
+packages involved (NumPy [@numpy], pandas [@pandas], SciPy [@scipy], matplotlib [@matplotlib], and seaborn [@seaborn]) are familiar parts of the core scientific Python 
 ecosystem, and hence very learnable and extensible. missingno works "out of the box" with a variety of data types and 
 formats, and provides an extremely compact API.
 
