@@ -193,3 +193,9 @@ That concludes our tour of `missingno`!
 For thoughts on features or bug reports see [Issues](https://github.com/ResidentMario/missingno/issues). If 
 you're interested in contributing to this library, see details on doing so in the `CONTRIBUTING.md` file in this 
 repository.
+
+## Citation
+
+You may cite this package using the following format (via [this paper](http://joss.theoj.org/papers/52b4115d6c03864b884fbf3334851322)):
+
+> Bilogur, (2018). Missingno: a missing data visualization suite. Journal of Open Source Software, 3(22), 547, https://doi.org/10.21105/joss.00547
