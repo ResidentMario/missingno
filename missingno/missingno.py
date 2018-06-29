@@ -150,9 +150,9 @@ def matrix(df,
         if labels:
             # Figure out what case to display the label in: mixed, upper, lower.
             label = 'Data Completeness'
-            if df.columns[0].islower():
+            if str(df.columns[0]).islower():
                 label = label.lower()
-            if df.columns[0].isupper():
+            if str(df.columns[0]).isupper():
                 label = label.upper()
 
             # Set up and rotate the sparkline label.
@@ -219,12 +219,15 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgra
     # plt.bar((nullity_counts / len(df)), figsize=figsize, fontsize=fontsize, color=color, log=log)
     ax1 = plt.gca()
 
+    axes = [ax1]
+
     # Start appending elements, starting with a modified bottom x axis.
     if labels or (labels is None and len(df.columns) <= 50):
         ax1.set_xticklabels(ax1.get_xticklabels(), rotation=45, ha='right', fontsize=fontsize)
 
         # Create the numerical ticks.
         ax2 = ax1.twinx()
+        axes.append(ax2)
         if not log:
             ax1.set_ylim([0, 1])
             ax2.set_yticks(ax1.get_yticks())
@@ -239,12 +242,13 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgra
 
     # Create the third axis, which displays columnar totals above the rest of the plot.
     ax3 = ax1.twiny()
+    axes.append(ax3)
     ax3.set_xticks(ax1.get_xticks())
     ax3.set_xlim(ax1.get_xlim())
     ax3.set_xticklabels(nullity_counts.values, fontsize=fontsize, rotation=45, ha='left')
     ax3.grid(False)
 
-    for ax in [ax1, ax2, ax3]:
+    for ax in axes:
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.spines['bottom'].set_visible(False)
