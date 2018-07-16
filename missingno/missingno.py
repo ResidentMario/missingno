@@ -239,6 +239,8 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgra
             ax2.set_yscale('log')
             ax2.set_ylim(ax1.get_ylim())
             ax2.set_yticklabels([int(n*len(df)) for n in ax1.get_yticks()], fontsize=fontsize)
+    else:
+        ax1.set_xticks([])
 
     # Create the third axis, which displays columnar totals above the rest of the plot.
     ax3 = ax1.twiny()
