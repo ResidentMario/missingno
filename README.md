@@ -16,7 +16,7 @@ $ quilt install ResidentMario/missingno_data
 Then to load the data into memory:
 
     >>> from quilt.data.ResidentMario import missingno_data
-    >>> collisions = missingno_data.nyc_injurious_collisions()
+    >>> collisions = missingno_data.nyc_collision_factors()
     >>> collisions = collisions.replace("nan", np.nan)
 
 The rest of this walkthrough will draw from this `collisions` dataset. I additionally define **nullity** to mean 
