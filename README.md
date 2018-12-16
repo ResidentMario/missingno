@@ -38,8 +38,7 @@ The `msno.matrix` nullity matrix is a data-dense display which lets you quickly 
 At a glance, date, time, the distribution of injuries, and the contribution factor of the first vehicle appear to be
 completely populated, while geographic information seems mostly complete, but spottier.
 
-The sparkline at right summarizes the general shape of the data completeness and points out the maximum and minimum
-rows.
+The sparkline at right summarizes the general shape of the data completeness and points out the rows with the maximum and minimum nullity in the dataset.
 
 This visualization will comfortably accommodate up to 50 labelled variables. Past that range labels begin to overlap
 or become unreadable, and by default large displays omit them.
