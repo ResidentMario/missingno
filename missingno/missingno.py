@@ -266,7 +266,8 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgra
 
 def heatmap(df, inline=False,
             filter=None, n=0, p=0, sort=None,
-            figsize=(20, 12), fontsize=16, labels=True, cmap='RdBu'
+            figsize=(20, 12), fontsize=16, labels=True, 
+            cmap='RdBu', vmin=-1, vmax=1, cbar=True
             ):
     """
     Presents a `seaborn` heatmap visualization of nullity correlation in the given DataFrame.
@@ -286,6 +287,8 @@ def heatmap(df, inline=False,
     :param fontsize: The figure's font size.
     :param labels: Whether or not to label each matrix entry with its correlation (default is True).
     :param cmap: What `matplotlib` colormap to use. Defaults to `RdBu`.
+    :param vmin: The normalized colormap threshold. Defaults to -1, e.g. the bottom of the color scale.
+    :param vmax: The normalized colormap threshold. Defaults to 1, e.g. the bottom of the color scale.
     :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
     return its figure.
     :return: If `inline` is False, the underlying `matplotlib.figure` object. Else, nothing.
@@ -307,10 +310,12 @@ def heatmap(df, inline=False,
     mask[np.triu_indices_from(mask)] = True
 
     if labels:
-        sns.heatmap(corr_mat, mask=mask, cmap=cmap, ax=ax0, cbar=False,
-                    annot=True, annot_kws={'size': fontsize - 2})
+        sns.heatmap(corr_mat, mask=mask, cmap=cmap, ax=ax0, cbar=cbar,
+                    annot=True, annot_kws={'size': fontsize - 2},
+                    vmin=vmin, vmax=vmax)
     else:
-        sns.heatmap(corr_mat, mask=mask, cmap=cmap, ax=ax0, cbar=False)
+        sns.heatmap(corr_mat, mask=mask, cmap=cmap, ax=ax0, cbar=cbar,
+                    vmin=vmin, vmax=vmax)
 
     # Apply visual corrections and modifications.
     ax0.xaxis.tick_bottom()
@@ -341,7 +346,7 @@ def heatmap(df, inline=False,
     else:
         return ax0
 
-    
+
 def dendrogram(df, method='average',
                filter=None, n=0, p=0, sort=None,
                orientation=None, figsize=None,

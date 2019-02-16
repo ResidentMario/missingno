@@ -22,8 +22,9 @@ var/
 *.egg
 MANIFEST
 
-# PyCharm project
+# Project folders
 .idea
+.vscode
 
 # Mac junk file
 .DS_Store

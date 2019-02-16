@@ -3,6 +3,7 @@ setup(
     name='missingno',
     packages=['missingno'], # this must be the same as the name above
     install_requires=['numpy', 'matplotlib', 'scipy', 'seaborn'],
+    extras_require={'tests': ['pytest', 'pytest-mpl']},
     py_modules=['missingno'],
     version='0.4.1',  # note to self: also update the one is the source!
     description='Missing data visualization module for Python.',
