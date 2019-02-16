@@ -48,7 +48,7 @@ def matrix(df,
     g[z > 0.5] = color
 
     # Set up the matplotlib grid layout. A unary subplot if no sparkline, a left-right splot if yes sparkline.
-    fig = plt.figure(figsize=figsize)
+    plt.figure(figsize=figsize)
     if sparkline:
         gs = gridspec.GridSpec(1, 2, width_ratios=width_ratios)
         gs.update(wspace=0.08)
@@ -214,7 +214,7 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgra
     df = nullity_filter(df, filter=filter, n=n, p=p)
     df = nullity_sort(df, sort=sort)
 
-    fig = plt.figure(figsize=figsize)
+    plt.figure(figsize=figsize)
     (nullity_counts / len(df)).plot(kind='bar', figsize=figsize, fontsize=fontsize, log=log, color=color)
     # plt.bar((nullity_counts / len(df)), figsize=figsize, fontsize=fontsize, color=color, log=log)
     ax1 = plt.gca()
@@ -297,7 +297,7 @@ def heatmap(df, inline=False,
     df = nullity_filter(df, filter=filter, n=n, p=p)
     df = nullity_sort(df, sort=sort)
 
-    fig = plt.figure(figsize=figsize)
+    plt.figure(figsize=figsize)
     gs = gridspec.GridSpec(1, 1)
     ax0 = plt.subplot(gs[0])
 
@@ -380,7 +380,7 @@ def dendrogram(df, method='average',
         else:
             figsize = (25, (25 + len(df.columns) - 50)*0.5)
     
-    fig = plt.figure(figsize=figsize)
+    plt.figure(figsize=figsize)
     gs = gridspec.GridSpec(1, 1)
     ax0 = plt.subplot(gs[0])
 
@@ -397,14 +397,14 @@ def dendrogram(df, method='average',
         else:
             orientation = 'bottom'
 
-    ret = hierarchy.dendrogram(z,
-                               orientation=orientation,
-                               labels=df.columns.tolist(),
-                               distance_sort='descending',
-                               link_color_func=lambda c: 'black',
-                               leaf_font_size=fontsize,
-                               ax=ax0
-                               )
+    hierarchy.dendrogram(z,
+                         orientation=orientation,
+                         labels=df.columns.tolist(),
+                         distance_sort='descending',
+                         link_color_func=lambda c: 'black',
+                         leaf_font_size=fontsize,
+                         ax=ax0
+                        )
 
     # Remove extraneous default visual elements.
     ax0.set_aspect('auto')
