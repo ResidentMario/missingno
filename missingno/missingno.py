@@ -110,10 +110,10 @@ def matrix(df,
             raise KeyError('Could not divide time index into desired frequency.')
 
         ax0.set_yticks(ts_list)
-        ax0.set_yticklabels(ts_ticks, fontsize=20, rotation=0)
+        ax0.set_yticklabels(ts_ticks, fontsize=int(fontsize / 16 * 20), rotation=0)
     else:
         ax0.set_yticks([0, df.shape[0] - 1])
-        ax0.set_yticklabels([1, df.shape[0]], fontsize=20, rotation=0)
+        ax0.set_yticklabels([1, df.shape[0]], fontsize=int(fontsize / 16 * 20), rotation=0)
 
     # Create the inter-column vertical grid.
     in_between_point = [x + 0.5 for x in range(0, width - 1)]
@@ -169,13 +169,13 @@ def matrix(df,
         ax1.annotate(max_completeness,
                      xy=(max_completeness, max_completeness_index),
                      xytext=(max_completeness + 2, max_completeness_index),
-                     fontsize=14,
+                     fontsize=int(fontsize / 16 * 14),
                      va='center',
                      ha='left')
         ax1.annotate(min_completeness,
                      xy=(min_completeness, min_completeness_index),
                      xytext=(min_completeness - 2, min_completeness_index),
-                     fontsize=14,
+                     fontsize=int(fontsize / 16 * 14),
                      va='center',
                      ha='right')
 
@@ -216,7 +216,6 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgra
 
     plt.figure(figsize=figsize)
     (nullity_counts / len(df)).plot(kind='bar', figsize=figsize, fontsize=fontsize, log=log, color=color)
-    # plt.bar((nullity_counts / len(df)), figsize=figsize, fontsize=fontsize, color=color, log=log)
     ax1 = plt.gca()
 
     axes = [ax1]
@@ -425,9 +424,9 @@ def dendrogram(df, method='average',
     elif orientation == 'top':
         ax0.set_xticklabels(ax0.xaxis.get_majorticklabels(), rotation=45, ha='right')
     if orientation == 'bottom' or orientation == 'top':
-        ax0.tick_params(axis='y', labelsize=20)
+        ax0.tick_params(axis='y', labelsize=int(fontsize / 16 * 20))
     else:
-        ax0.tick_params(axis='x', labelsize=20)
+        ax0.tick_params(axis='x', labelsize=int(fontsize / 16 * 20))
 
     if inline:
         plt.show()
