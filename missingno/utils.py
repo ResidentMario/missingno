@@ -4,16 +4,16 @@ import numpy as np
 
 def nullity_sort(df, sort=None):
     """
-    Sorts a DataFrame according to its nullity, in either ascending or descending order.
+    Sorts a DataFrame's columns according to their nullity, in either ascending or descending order.
 
     :param df: The DataFrame object being sorted.
     :param sort: The sorting method: either "ascending", "descending", or None (default).
     :return: The nullity-sorted DataFrame.
     """
     if sort == 'ascending':
-        return df.iloc[np.argsort(df.count(axis='columns').values), :]
+        return df.iloc[:, np.argsort(df.count(axis=0).values)]
     elif sort == 'descending':
-        return df.iloc[np.flipud(np.argsort(df.count(axis='columns').values)), :]
+        return df.iloc[:, np.flipud(np.argsort(df.count(axis=0).values))]
     else:
         return df
 
