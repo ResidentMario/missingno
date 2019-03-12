@@ -11,9 +11,9 @@ def nullity_sort(df, sort=None):
     :return: The nullity-sorted DataFrame.
     """
     if sort == 'ascending':
-        return df.iloc[:, np.argsort(df.count(axis=0).values)]
+        return df.iloc[:, np.argsort(df.count(axis='rows').values)]
     elif sort == 'descending':
-        return df.iloc[:, np.flipud(np.argsort(df.count(axis=0).values))]
+        return df.iloc[:, np.flipud(np.argsort(df.count(axis='rows').values))]
     else:
         return df
 
