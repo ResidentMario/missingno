@@ -13,7 +13,7 @@ def matrix(df,
            filter=None, n=0, p=0, sort=None,
            figsize=(25, 10), width_ratios=(15, 1), color=(0.25, 0.25, 0.25),
            fontsize=16, labels=None, sparkline=True, inline=False,
-           freq=None):
+           freq=None, ax=None):
     """
     A matrix visualization of the nullity of the given DataFrame.
 
@@ -46,14 +46,23 @@ def matrix(df,
     g[z > 0.5] = color
 
     # Set up the matplotlib grid layout. A unary subplot if no sparkline, a left-right splot if yes sparkline.
-    plt.figure(figsize=figsize)
-    if sparkline:
-        gs = gridspec.GridSpec(1, 2, width_ratios=width_ratios)
-        gs.update(wspace=0.08)
-        ax1 = plt.subplot(gs[1])
+    if ax is None:
+        plt.figure(figsize=figsize)
+        if sparkline:
+            gs = gridspec.GridSpec(1, 2, width_ratios=width_ratios)
+            gs.update(wspace=0.08)
+            ax1 = plt.subplot(gs[1])
+        else:
+            gs = gridspec.GridSpec(1, 1)
+        ax0 = plt.subplot(gs[0])
     else:
-        gs = gridspec.GridSpec(1, 1)
-    ax0 = plt.subplot(gs[0])
+        if sparkline is not False:
+            warnings.warn(
+                "Plotting a sparkline on an existing axis is not currently supported. "
+                "To remove this warning, set sparkline=False."
+            )
+            sparkline = False
+        ax0 = ax
 
     # Create the nullity plot.
     ax0.imshow(g, interpolation='none')
@@ -185,13 +194,17 @@ def matrix(df,
         ax1.xaxis.set_ticks_position('none')
 
     if inline:
+        warnings.warn(
+            "The 'inline' argument has been deprecated, and will be removed in a future version "
+            "of missingno."
+        )
         plt.show()
     else:
         return ax0
 
 
 def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgray', inline=False,
-        filter=None, n=0, p=0, sort=None):
+        filter=None, n=0, p=0, sort=None, ax=None):
     """
     A bar chart visualization of the nullity of the given DataFrame.
 
@@ -212,9 +225,15 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgra
     df = nullity_sort(df, sort=sort, axis='rows')
     nullity_counts = len(df) - df.isnull().sum()
 
+    if ax is None:
+        ax1 = plt.gca()
+    else:
+        ax1 = ax
+
     plt.figure(figsize=figsize)
-    (nullity_counts / len(df)).plot(kind='bar', figsize=figsize, fontsize=fontsize, log=log, color=color)
-    ax1 = plt.gca()
+    (nullity_counts / len(df)).plot.bar(
+        figsize=figsize, fontsize=fontsize, log=log, color=color, ax=ax1
+    )
 
     axes = [ax1]
 
@@ -256,6 +275,10 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgra
         ax.yaxis.set_ticks_position('none')
 
     if inline:
+        warnings.warn(
+            "The 'inline' argument has been deprecated, and will be removed in a future version "
+            "of missingno."
+        )
         plt.show()
     else:
         return ax1
@@ -264,7 +287,7 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgra
 def heatmap(df, inline=False,
             filter=None, n=0, p=0, sort=None,
             figsize=(20, 12), fontsize=16, labels=True, 
-            cmap='RdBu', vmin=-1, vmax=1, cbar=True
+            cmap='RdBu', vmin=-1, vmax=1, cbar=True, ax=None
             ):
     """
     Presents a `seaborn` heatmap visualization of nullity correlation in the given DataFrame.
@@ -293,9 +316,11 @@ def heatmap(df, inline=False,
     df = nullity_filter(df, filter=filter, n=n, p=p)
     df = nullity_sort(df, sort=sort, axis='rows')
 
-    plt.figure(figsize=figsize)
-    gs = gridspec.GridSpec(1, 1)
-    ax0 = plt.subplot(gs[0])
+    if ax is None:
+        plt.figure(figsize=figsize)
+        ax0 = plt.gca()
+    else:
+        ax0 = ax
 
     # Remove completely filled or completely empty variables.
     df = df.iloc[:,[i for i, n in enumerate(np.var(df.isnull(), axis='rows')) if n > 0]]
@@ -338,6 +363,10 @@ def heatmap(df, inline=False,
             text.set_text(round(t, 1))
 
     if inline:
+        warnings.warn(
+            "The 'inline' argument has been deprecated, and will be removed in a future version "
+            "of missingno."
+        )
         plt.show()
     else:
         return ax0
@@ -346,7 +375,7 @@ def heatmap(df, inline=False,
 def dendrogram(df, method='average',
                filter=None, n=0, p=0,
                orientation=None, figsize=None,
-               fontsize=16, inline=False
+               fontsize=16, inline=False, ax=None
                ):
     """
     Fits a `scipy` hierarchical clustering algorithm to the given DataFrame's variables and visualizes the results as
@@ -374,10 +403,12 @@ def dendrogram(df, method='average',
             figsize = (25, 10)
         else:
             figsize = (25, (25 + len(df.columns) - 50) * 0.5)
-    
-    plt.figure(figsize=figsize)
-    gs = gridspec.GridSpec(1, 1)
-    ax0 = plt.subplot(gs[0])
+
+    if ax is None:
+        plt.figure(figsize=figsize)
+        ax0 = plt.gca()
+    else:
+        ax0 = ax
 
     df = nullity_filter(df, filter=filter, n=n, p=p)
 
@@ -425,6 +456,10 @@ def dendrogram(df, method='average',
         ax0.tick_params(axis='x', labelsize=int(fontsize / 16 * 20))
 
     if inline:
+        warnings.warn(
+            "The 'inline' argument has been deprecated, and will be removed in a future version "
+            "of missingno."
+        )
         plt.show()
     else:
         return ax0
@@ -487,6 +522,10 @@ def geoplot(df,
     ax = plt.gca()
 
     if inline:
+        warnings.warn(
+            "The 'inline' argument has been deprecated, and will be removed in a future version "
+            "of missingno."
+        )
         plt.show()
     else:
         return ax
