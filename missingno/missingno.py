@@ -229,8 +229,8 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgra
         ax1 = plt.gca()
     else:
         ax1 = ax
+        figsize = None  # for behavioral consistency with other plot types, re-use the given size
 
-    plt.figure(figsize=figsize)
     (nullity_counts / len(df)).plot.bar(
         figsize=figsize, fontsize=fontsize, log=log, color=color, ax=ax1
     )
