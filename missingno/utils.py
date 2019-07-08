@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def nullity_sort(df, sort=None):
+def nullity_sort(df, sort=None, axis='columns'):
     """
     Sorts a DataFrame according to its nullity, in either ascending or descending order.
 
@@ -10,12 +10,24 @@ def nullity_sort(df, sort=None):
     :param sort: The sorting method: either "ascending", "descending", or None (default).
     :return: The nullity-sorted DataFrame.
     """
-    if sort == 'ascending':
-        return df.iloc[np.argsort(df.count(axis='columns').values), :]
-    elif sort == 'descending':
-        return df.iloc[np.flipud(np.argsort(df.count(axis='columns').values)), :]
-    else:
+    if sort is None:
         return df
+    elif sort not in ['ascending', 'descending']:
+        raise ValueError('The "sort" parameter must be set to "ascending" or "descending".')
+
+    if axis not in ['rows', 'columns']:
+        raise ValueError('The "axis" parameter must be set to "rows" or "columns".')
+
+    if axis == 'columns':
+        if sort == 'ascending':
+            return df.iloc[np.argsort(df.count(axis='columns').values), :]
+        elif sort == 'descending':
+            return df.iloc[np.flipud(np.argsort(df.count(axis='columns').values)), :]
+    elif axis == 'rows':
+        if sort == 'ascending':
+            return df.iloc[:, np.argsort(df.count(axis='rows').values)]
+        elif sort == 'descending':
+            return df.iloc[:, np.flipud(np.argsort(df.count(axis='rows').values))]
 
 
 def nullity_filter(df, filter=None, p=0, n=0):
