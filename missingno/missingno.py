@@ -17,13 +17,11 @@ def matrix(df,
     """
     A matrix visualization of the nullity of the given DataFrame.
 
-    For optimal performance, please stay within 250 rows and 50 columns.
-
     :param df: The `DataFrame` being mapped.
     :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default).
     :param n: The max number of columns to include in the filtered DataFrame.
     :param p: The max percentage fill of the columns in the filtered DataFrame.
-    :param sort: The sort to apply to the heatmap. Should be one of "ascending", "descending", or None (default).
+    :param sort: The row sort order to apply. Can be "ascending", "descending", or None.
     :param figsize: The size of the figure to display.
     :param fontsize: The figure's font size. Default to 16.
     :param labels: Whether or not to display the column names. Defaults to the underlying data labels when there are
@@ -35,7 +33,7 @@ def matrix(df,
     :return: If `inline` is False, the underlying `matplotlib.figure` object. Else, nothing.
     """
     df = nullity_filter(df, filter=filter, n=n, p=p)
-    df = nullity_sort(df, sort=sort)
+    df = nullity_sort(df, sort=sort, axis='columns')
 
     height = df.shape[0]
     width = df.shape[1]
@@ -202,7 +200,7 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgra
     :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default).
     :param n: The cap on the number of columns to include in the filtered DataFrame.
     :param p: The cap on the percentage fill of the columns in the filtered DataFrame.
-    :param sort: The sort to apply to the heatmap. Should be one of "ascending", "descending", or None (default).
+    :param sort: The column sort order to apply. Can be "ascending", "descending", or None.
     :param figsize: The size of the figure to display.
     :param fontsize: The figure's font size. This default to 16.
     :param labels: Whether or not to display the column names. Would need to be turned off on particularly large
@@ -210,9 +208,9 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgra
     :param color: The color of the filled columns. Default to the RGB multiple `(0.25, 0.25, 0.25)`.
     :return: If `inline` is False, the underlying `matplotlib.figure` object. Else, nothing.
     """
-    nullity_counts = len(df) - df.isnull().sum()
     df = nullity_filter(df, filter=filter, n=n, p=p)
-    df = nullity_sort(df, sort=sort)
+    df = nullity_sort(df, sort=sort, axis='rows')
+    nullity_counts = len(df) - df.isnull().sum()
 
     plt.figure(figsize=figsize)
     (nullity_counts / len(df)).plot(kind='bar', figsize=figsize, fontsize=fontsize, log=log, color=color)
@@ -280,8 +278,7 @@ def heatmap(df, inline=False,
     more information.
     :param p: The cap on the percentage fill of the columns in the filtered DataFrame. See  `nullity_filter()` for
     more information.
-    :param sort: The sort to apply to the heatmap. Should be one of "ascending", "descending", or None. See
-    `nullity_sort()` for more information.
+    :param sort: The column sort order to apply. Can be "ascending", "descending", or None.
     :param figsize: The size of the figure to display. This is a `matplotlib` parameter which defaults to (20, 12).
     :param fontsize: The figure's font size.
     :param labels: Whether or not to label each matrix entry with its correlation (default is True).
@@ -294,7 +291,7 @@ def heatmap(df, inline=False,
     """
     # Apply filters and sorts, set up the figure.
     df = nullity_filter(df, filter=filter, n=n, p=p)
-    df = nullity_sort(df, sort=sort)
+    df = nullity_sort(df, sort=sort, axis='rows')
 
     plt.figure(figsize=figsize)
     gs = gridspec.GridSpec(1, 1)
@@ -347,14 +344,14 @@ def heatmap(df, inline=False,
 
 
 def dendrogram(df, method='average',
-               filter=None, n=0, p=0, sort=None,
+               filter=None, n=0, p=0,
                orientation=None, figsize=None,
                fontsize=16, inline=False
                ):
     """
     Fits a `scipy` hierarchical clustering algorithm to the given DataFrame's variables and visualizes the results as
     a `scipy` dendrogram.
-    
+
     The default vertical display will fit up to 50 columns. If more than 50 columns are specified and orientation is
     left unspecified the dendrogram will automatically swap to a horizontal display to fit the additional variables.
 
@@ -364,7 +361,6 @@ def dendrogram(df, method='average',
     :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default).
     :param n: The cap on the number of columns to include in the filtered DataFrame.
     :param p: The cap on the percentage fill of the columns in the filtered DataFrame.
-    :param sort: The sort to apply to the heatmap. Should be one of "ascending", "descending", or None.
     :param figsize: The size of the figure to display. This is a `matplotlib` parameter which defaults to `(25, 10)`.
     :param fontsize: The figure's font size.
     :param orientation: The way the dendrogram is oriented. Defaults to top-down if there are less than or equal to 50
@@ -377,14 +373,13 @@ def dendrogram(df, method='average',
         if len(df.columns) <= 50 or orientation == 'top' or orientation == 'bottom':
             figsize = (25, 10)
         else:
-            figsize = (25, (25 + len(df.columns) - 50)*0.5)
+            figsize = (25, (25 + len(df.columns) - 50) * 0.5)
     
     plt.figure(figsize=figsize)
     gs = gridspec.GridSpec(1, 1)
     ax0 = plt.subplot(gs[0])
 
     df = nullity_filter(df, filter=filter, n=n, p=p)
-    df = nullity_sort(df, sort=sort)
 
     # Link the hierarchical output matrix, figure out orientation, construct base dendrogram.
     x = np.transpose(df.isnull().astype(int).values)
@@ -396,14 +391,15 @@ def dendrogram(df, method='average',
         else:
             orientation = 'bottom'
 
-    hierarchy.dendrogram(z,
-                         orientation=orientation,
-                         labels=df.columns.tolist(),
-                         distance_sort='descending',
-                         link_color_func=lambda c: 'black',
-                         leaf_font_size=fontsize,
-                         ax=ax0
-                        )
+    hierarchy.dendrogram(
+        z,
+        orientation=orientation,
+        labels=df.columns.tolist(),
+        distance_sort='descending',
+        link_color_func=lambda c: 'black',
+        leaf_font_size=fontsize,
+        ax=ax0
+    )
 
     # Remove extraneous default visual elements.
     ax0.set_aspect('auto')
@@ -435,7 +431,7 @@ def dendrogram(df, method='average',
 
 
 def geoplot(df,
-            filter=None, n=0, p=0, sort=None,
+            filter=None, n=0, p=0,
             x=None, y=None, figsize=(25, 10), inline=False,
             by=None, cmap='YlGn', **kwargs):
     """
@@ -447,7 +443,6 @@ def geoplot(df,
 
     :param df: The DataFrame whose completeness is being geoplotted.
     :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default).
-    :param sort: The sort to apply to the heatmap. Should be one of "ascending", "descending", or None.
     :param n: The cap on the number of columns to include in the filtered DataFrame.
     :param p: The cap on the percentage fill of the columns in the filtered DataFrame.
     :param figsize: The size of the figure to display. This is a `matplotlib` parameter which defaults to `(25, 10)`.
@@ -466,7 +461,6 @@ def geoplot(df,
     from shapely.geometry import Point
 
     df = nullity_filter(df, filter=filter, n=n, p=p)
-    df = nullity_sort(df, sort=sort)
 
     nullity = df.notnull().sum(axis='columns') / df.shape[1]
     if x and y:
