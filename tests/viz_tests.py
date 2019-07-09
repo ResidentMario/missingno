@@ -134,7 +134,7 @@ class TestGeoplot(unittest.TestCase):
         self.x_y_df = simple_df
 
     # @pytest.mark.mpl_image_compare
-    @pytest.xfail
+    @pytest.mark.xfail
     def test_geoplot_quadtree(self):
         msno.geoplot(self.x_y_df, x='r0', y='r1')
         return plt.gcf()
