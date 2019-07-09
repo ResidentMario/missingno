@@ -504,9 +504,8 @@ def geoplot(df,
 
     if gplt.__version__ >= "0.3.0":
         raise ImportError(
-            f"The missingno geoplot function requires geoplot package version 0.2.4 or lower, "
-            f"but version {gplt.__version__} is installed instead. To use the geoplot function, "
-            f"downgrade to an older version of the geoplot package."
+            "The missingno geoplot function requires geoplot package version 0.2.4 or lower." 
+            "To use the geoplot function, downgrade to an older version of the geoplot package."
         )
 
     import geopandas as gpd
