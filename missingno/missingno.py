@@ -491,7 +491,24 @@ def geoplot(df,
     :param kwargs: Additional keyword arguments are passed to the underlying `geoplot` function.
     :return: If `inline` is False, the underlying `matplotlib.figure` object. Else, nothing.
     """
-    import geoplot as gplt
+    warnings.warn(
+        "The 'geoplot' function has been deprecated, and will be removed in a future version "
+        "of missingno. The 'geoplot' package has an example recipe for a more full-featured "
+        "geospatial nullity plot: "
+        "https://residentmario.github.io/geoplot/gallery/plot_san_francisco_trees.html"
+    )
+    try:
+        import geoplot as gplt
+    except ImportError:
+        raise ImportError("Install geoplot <= 0.2.4 (the package) for geoplot function support")
+
+    if gplt.__version__ >= "0.3.0":
+        raise ImportError(
+            f"The missingno geoplot function requires geoplot package version 0.2.4 or lower, "
+            f"but version {gplt.__version__} is installed instead. To use the geoplot function, "
+            f"downgrade to an older version of the geoplot package."
+        )
+
     import geopandas as gpd
     from shapely.geometry import Point
 
