@@ -204,7 +204,7 @@ def matrix(df,
 
 
 def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgray', inline=False,
-        filter=None, n=0, p=0, sort=None, ax=None):
+        filter=None, n=0, p=0, sort=None, ax=None, orientation=None):
     """
     A bar chart visualization of the nullity of the given DataFrame.
 
@@ -219,21 +219,31 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgra
     :param labels: Whether or not to display the column names. Would need to be turned off on particularly large
     displays. Defaults to True.
     :param color: The color of the filled columns. Default to the RGB multiple `(0.25, 0.25, 0.25)`.
+    :param orientation: The way the bar plot is oriented. Defaults to vertical if there are less than or equal to 50
+    columns and horizontal if there are more.
     :return: If `inline` is False, the underlying `matplotlib.figure` object. Else, nothing.
     """
     df = nullity_filter(df, filter=filter, n=n, p=p)
     df = nullity_sort(df, sort=sort, axis='rows')
     nullity_counts = len(df) - df.isnull().sum()
 
+    if not orientation:
+        if len(df.columns) > 50:
+            orientation = 'left'
+        else:
+            orientation = 'bottom'
+           
     if ax is None:
         ax1 = plt.gca()
     else:
         ax1 = ax
         figsize = None  # for behavioral consistency with other plot types, re-use the given size
 
-    (nullity_counts / len(df)).plot.bar(
-        figsize=figsize, fontsize=fontsize, log=log, color=color, ax=ax1
-    )
+    plot_args = {'figsize': figsize, 'fontsize': fontsize, 'log': log, 'color': color, 'ax': ax1}
+    if orientation == 'bottom':
+        (nullity_counts / len(df)).plot.bar(**plot_args)
+    else:
+        (nullity_counts / len(df)).plot.barh(**plot_args)                      
 
     axes = [ax1]
 
