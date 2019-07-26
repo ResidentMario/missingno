@@ -227,7 +227,7 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgra
     df = nullity_sort(df, sort=sort, axis='rows')
     nullity_counts = len(df) - df.isnull().sum()
 
-    if not orientation:
+    if orientation is None:
         if len(df.columns) > 50:
             orientation = 'left'
         else:
@@ -238,6 +238,9 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgra
     else:
         ax1 = ax
         figsize = None  # for behavioral consistency with other plot types, re-use the given size
+
+    if figsize is not None and orientation != 'bottom':
+        figsize = reversed(figsize)
 
     plot_args = {'figsize': figsize, 'fontsize': fontsize, 'log': log, 'color': color, 'ax': ax1}
     if orientation == 'bottom':
@@ -257,23 +260,61 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgra
         if not log:
             ax1.set_ylim([0, 1])
             ax2.set_yticks(ax1.get_yticks())
-            ax2.set_yticklabels([int(n*len(df)) for n in ax1.get_yticks()], fontsize=fontsize)
         else:
             # For some reason when a logarithmic plot is specified `ax1` always contains two more ticks than actually
             # appears in the plot. The fix is to ignore the first and last entries. Also note that when a log scale
             # is used, we have to make it match the `ax1` layout ourselves.
             ax2.set_yscale('log')
             ax2.set_ylim(ax1.get_ylim())
-            ax2.set_yticklabels([int(n*len(df)) for n in ax1.get_yticks()], fontsize=fontsize)
-    else:
-        ax1.set_xticks([])
+        ax2.set_yticklabels([int(n*len(df)) for n in ax1.get_yticks()], fontsize=fontsize)
 
-    # Create the third axis, which displays columnar totals above the rest of the plot.
-    ax3 = ax1.twiny()
-    axes.append(ax3)
-    ax3.set_xticks(ax1.get_xticks())
-    ax3.set_xlim(ax1.get_xlim())
-    ax3.set_xticklabels(nullity_counts.values, fontsize=fontsize, rotation=45, ha='left')
+        # Create the third axis, which displays columnar totals above the rest of the plot.
+        ax3 = ax1.twiny()
+        axes.append(ax3)
+        ax3.set_xticks(ax1.get_xticks())
+        ax3.set_xlim(ax1.get_xlim())
+        ax3.set_xticklabels(nullity_counts.values, fontsize=fontsize, rotation=45, ha='left')
+    else:
+        # Create the numerical ticks.
+        ax2 = ax1.twinx()
+
+        axes.append(ax2)
+        if not log:
+            # Width
+            ax1.set_xlim([0, 1])
+
+            # Bottom
+            ax2.set_xticks(ax1.get_xticks())
+            ax2.set_xticklabels([int(n*len(df)) for n in ax1.get_xticks()], fontsize=fontsize)
+
+            # Right
+            ax2.set_yticks(ax1.get_yticks())
+            ax2.set_yticklabels(nullity_counts.values, fontsize=fontsize, ha='left')
+        else:
+            # For some reason when a logarithmic plot is specified `ax1` always contains two more ticks than actually
+            # appears in the plot. The fix is to ignore the first and last entries. Also note that when a log scale
+            # is used, we have to make it match the `ax1` layout ourselves.
+            ax1.set_xscale('log')
+            ax1.set_xlim(ax1.get_xlim())
+
+            # Bottom
+            ax2.set_xticks(ax1.get_xticks())
+            ax2.set_xticklabels([int(n*len(df)) for n in ax1.get_xticks()], fontsize=fontsize)
+
+            # Right
+            ax2.set_yticks(ax1.get_yticks())
+            ax2.set_yticklabels(nullity_counts.values, fontsize=fontsize, ha='left')
+
+        # Create the third axis, which displays columnar totals above the rest of the plot.
+        ax3 = ax1.twiny()
+
+        axes.append(ax3)
+        ax3.set_yticks(ax1.get_yticks())
+        if log:
+            ax3.set_xscale('log')
+            ax3.set_xlim(ax1.get_xlim())
+        ax3.set_ylim(ax1.get_ylim())
+
     ax3.grid(False)
 
     for ax in axes:
