@@ -203,13 +203,13 @@ def matrix(df,
         return ax0
 
 
-def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgray', inline=False,
+def bar(df, figsize=None, fontsize=16, labels=None, log=False, color='dimgray', inline=False,
         filter=None, n=0, p=0, sort=None, ax=None, orientation=None):
     """
     A bar chart visualization of the nullity of the given DataFrame.
 
     :param df: The input DataFrame.
-    :param log: Whether or not to display a logorithmic plot. Defaults to False (linear).
+    :param log: Whether or not to display a logarithmic plot. Defaults to False (linear).
     :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default).
     :param n: The cap on the number of columns to include in the filtered DataFrame.
     :param p: The cap on the percentage fill of the columns in the filtered DataFrame.
@@ -235,12 +235,14 @@ def bar(df, figsize=(24, 10), fontsize=16, labels=None, log=False, color='dimgra
            
     if ax is None:
         ax1 = plt.gca()
+        if figsize is None:
+            if len(df.columns) <= 50 or orientation == 'top' or orientation == 'bottom':
+                figsize = (25, 10)
+            else:
+                figsize = (25, (25 + len(df.columns) - 50) * 0.5)
     else:
         ax1 = ax
         figsize = None  # for behavioral consistency with other plot types, re-use the given size
-
-    if figsize is not None and orientation != 'bottom':
-        figsize = reversed(figsize)
 
     plot_args = {'figsize': figsize, 'fontsize': fontsize, 'log': log, 'color': color, 'ax': ax1}
     if orientation == 'bottom':
