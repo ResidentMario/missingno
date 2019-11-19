@@ -1,0 +1,9 @@
+include *.md
+
+include paper.bib
+include QuickStart.ipynb
+
+include postBuild
+include *.yml
+
+graft tests
