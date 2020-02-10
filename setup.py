@@ -1,6 +1,7 @@
 from setuptools import setup
 setup(
     name='missingno',
+    license='MIT License',
     packages=['missingno'], # this must be the same as the name above
     install_requires=['numpy', 'matplotlib', 'scipy', 'seaborn'],
     extras_require={'tests': ['pytest', 'pytest-mpl']},
