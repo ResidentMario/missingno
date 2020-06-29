@@ -545,7 +545,8 @@ def geoplot(df,
         plt.show()
     else:
         return ax
-    
+
+
 def pattern(df, counter_name='mvcount', sort=True):
     """
     This function will replace the non-missing values with 1 and missing values with 0. The frequency of each pattern will be calculated in a column with the default name 'mvcount'. By default, the resulting dataframe will be sorted in order of descending frequency.
@@ -557,11 +558,12 @@ def pattern(df, counter_name='mvcount', sort=True):
     
     """
     counter_name_dict = {counter_name: 1}
-    mv = df.where(df.isna(), other=1) \
-        .fillna(0).astype('int') \
+    mv = (
+        pd.DataFrame(np.where(df.isna(),0,1), columns=df.columns)
         .assign(**counter_name_dict) \
         .groupby(list(df.columns), as_index=False) \
         .agg({counter_name: 'sum'})
+    )
     if sort:
         mv = mv.sort_values(counter_name, ascending=False).reset_index(drop=True)
         return mv
