@@ -102,10 +102,10 @@ def matrix(df,
                                                     t.strftime('%Y-%m-%d'))
 
         elif type(df.index) == pd.DatetimeIndex:
-            ts_array = pd.date_range(df.index.date[0], df.index.date[-1],
+            ts_array = pd.date_range(df.index[0], df.index[-1],
                                      freq=freq).values
 
-            ts_ticks = pd.date_range(df.index.date[0], df.index.date[-1],
+            ts_ticks = pd.date_range(df.index[0], df.index[-1],
                                      freq=freq).map(lambda t:
                                                     t.strftime('%Y-%m-%d'))
         else:
