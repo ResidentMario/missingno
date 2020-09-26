@@ -86,7 +86,7 @@ Nullity correlation ranges from `-1` (if one variable appears the other definite
 
 Variables that are always full or always empty have no meaningful correlation, and so are silently removed from the visualization&mdash;in this case for instance the datetime and injury number columns, which are completely filled, are not included.
 
-Entries marked `<1` or `>-1` are have a correlation that is close to being exactingly negative or positive, but is still not quite perfectly so. This points to a small number of records in the dataset which are erroneous. For example, in this dataset the correlation between `VEHICLE CODE TYPE 3` and `CONTRIBUTING FACTOR VEHICLE 3` is `<1`, indicating that, contrary to our expectation, there are a few records which have one or the other, but not both. These cases will require special attention.
+Entries marked `<1` or `>-1` have a correlation that is close to being exactingly negative or positive, but is still not quite perfectly so. This points to a small number of records in the dataset which are erroneous. For example, in this dataset the correlation between `VEHICLE CODE TYPE 3` and `CONTRIBUTING FACTOR VEHICLE 3` is `<1`, indicating that, contrary to our expectation, there are a few records which have one or the other, but not both. These cases will require special attention.
 
 The heatmap works great for picking out data completeness relationships between variable pairs, but its explanatory power is limited when it comes to larger relationships and it has no particular support for extremely large datasets.
 
