@@ -127,7 +127,7 @@ For more advanced configuration details for your plots, refer to the `CONFIGURAT
 ## Contributing
 
 For thoughts on features or bug reports see [Issues](https://github.com/ResidentMario/missingno/issues). If 
-you're interested in contributing to this library, see details on doing so in the `CONTRIBUTING.md` file in this 
+you're interested in contributing to this amazing library, see details on doing so in the `CONTRIBUTING.md` file in this 
 repository.
 
 ## Citation
