@@ -40,7 +40,7 @@ def matrix(df,
 
     # z is the color-mask array, g is a NxNx3 matrix. Apply the z color-mask to set the RGB of each pixel.
     z = df.notnull().values
-    g = np.zeros((height, width, 3))
+    g = np.zeros((height, width, 3), dtype=np.float32)
 
     g[z < 0.5] = [1, 1, 1]
     g[z > 0.5] = color
