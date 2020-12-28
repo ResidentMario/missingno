@@ -47,7 +47,7 @@ $ quilt install # installs dependencies from quilt.yml
 
 To update the data sample, you will need to push to this package, using [the instructions here](https://docs.quiltdata.com/make-a-package.html).
 
-The data itself is a `csv` version of a `geojson` file (less geometry) packaged into the example data used by the `geoplot` package (another project of mine). The master copy is a seperate repository on GitHub: [`missingno-data`](https://github.com/ResidentMario/missingno-data).
+The data itself is a `csv` version of a `geojson` file (less geometry) packaged into the example data used by the `geoplot` package (another project of mine). The master copy is a separate repository on GitHub: [`missingno-data`](https://github.com/ResidentMario/missingno-data).
 
 ## Documentation
 
