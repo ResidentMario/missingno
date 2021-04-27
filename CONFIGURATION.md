@@ -88,7 +88,7 @@ If you are not satisfied with these admittedly basic configuration parameters, t
 in any way you like using `matplotlib` post-facto.
 
 The best way to do this is to specify `inline=False`, which will cause `missingno` to return the underlying
-`matplotlib.figure.Figure` object. Anyone with sufficient knowledge of `matplotlib` operations and [the missingno source code](https://github.com/ResidentMario/missingno/blob/master/missingno/missingno.py)
+`matplotlib.axis.Axis` object of the main plot (e.g. only the matrix is returned when plotting the matrix with the sparkline). Anyone with sufficient knowledge of `matplotlib` operations and [the missingno source code](https://github.com/ResidentMario/missingno/blob/master/missingno/missingno.py)
 can then tweak the display to their liking. For example, the following code will bump the size of the dendrogram
 visualization's y-axis labels up from `20` to `30`:
 
