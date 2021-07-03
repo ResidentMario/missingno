@@ -3,32 +3,35 @@
 Messy datasets? Missing values? `missingno` provides a small toolset of flexible and easy-to-use missing data
 visualizations and utilities that allows you to get a quick visual summary of the completeness (or lack thereof) of your dataset. Just `pip install missingno` to get started.
 
-## Quickstart
+## quickstart
 
-This quickstart uses a sample of the [NYPD Motor Vehicle Collisions Dataset](https://data.cityofnewyork.us/Public-Safety/NYPD-Motor-Vehicle-Collisions/h9gi-nx95) 
-dataset. To get the data yourself, run the following on your command line:
+This quickstart uses a sample of the [NYPD Motor Vehicle Collisions Dataset](https://data.cityofnewyork.us/Public-Safety/NYPD-Motor-Vehicle-Collisions/h9gi-nx95) dataset. To get the data yourself, run the following on your command line:
 
-```sh
+```bash
 $ pip install quilt
 $ quilt install ResidentMario/missingno_data
 ```
 
 Then to load the data into memory:
 
-    >>> from quilt.data.ResidentMario import missingno_data
-    >>> collisions = missingno_data.nyc_collision_factors()
-    >>> collisions = collisions.replace("nan", np.nan)
+```python
+from quilt.data.ResidentMario import missingno_data
+collisions = missingno_data.nyc_collision_factors()
+collisions = collisions.replace("nan", np.nan)
+```
 
-The rest of this walkthrough will draw from this `collisions` dataset. I additionally define **nullity** to mean whether a particular variable is filled in or not.
+The rest of this walkthrough will draw from this `collisions` dataset.
 
-### Matrix
+### `matrix`
 
 The `msno.matrix` nullity matrix is a data-dense display which lets you quickly visually pick out patterns in
  data completion.
 
-    >>> import missingno as msno
-    >>> %matplotlib inline
-    >>> msno.matrix(collisions.sample(250))
+```python
+import missingno as msno
+%matplotlib inline
+msno.matrix(collisions.sample(250))
+```
 
 ![alt text][two_hundred_fifty]
 
@@ -40,30 +43,26 @@ The sparkline at right summarizes the general shape of the data completeness and
 
 This visualization will comfortably accommodate up to 50 labelled variables. Past that range labels begin to overlap or become unreadable, and by default large displays omit them.
 
-<!--
-    >>> msno.matrix(housing.sample(250))
-
-![alt text][large_matrix]
-
-[large_matrix]: http://i.imgur.com/yITFVju.png
--->
-
 If you are working with time-series data, you can [specify a periodicity](http://pandas.pydata.org/pandas-docs/stable/timeseries.html#timeseries-offset-aliases)
 using the `freq` keyword parameter:
 
-    >>> null_pattern = (np.random.random(1000).reshape((50, 20)) > 0.5).astype(bool)
-    >>> null_pattern = pd.DataFrame(null_pattern).replace({False: None})
-    >>> msno.matrix(null_pattern.set_index(pd.period_range('1/1/2011', '2/1/2015', freq='M')) , freq='BQ')
+```python
+null_pattern = (np.random.random(1000).reshape((50, 20)) > 0.5).astype(bool)
+null_pattern = pd.DataFrame(null_pattern).replace({False: None})
+msno.matrix(null_pattern.set_index(pd.period_range('1/1/2011', '2/1/2015', freq='M')) , freq='BQ')
+```
 
 ![alt text][ts_matrix]
 
 [ts_matrix]: https://i.imgur.com/VLvWpsV.png
 
-### Bar Chart
+### `bar`
 
 `msno.bar` is a simple visualization of nullity by column:
 
-    >>> msno.bar(collisions.sample(1000))
+```python
+msno.bar(collisions.sample(1000))
+```
 
 ![alt text][bar]
 
@@ -71,11 +70,13 @@ using the `freq` keyword parameter:
 
 You can switch to a logarithmic scale by specifying `log=True`. `bar` provides the same information as `matrix`, but in a simpler format.
 
-### Heatmap
+### `heatmap`
 
 The `missingno` correlation heatmap measures nullity correlation: how strongly the presence or absence of one variable affects the presence of another:
 
-    >>> msno.heatmap(collisions)
+```python
+msno.heatmap(collisions)
+```
 
 ![alt text][heatmap]
 
@@ -91,11 +92,13 @@ Entries marked `<1` or `>-1` have a correlation that is close to being exactingl
 
 The heatmap works great for picking out data completeness relationships between variable pairs, but its explanatory power is limited when it comes to larger relationships and it has no particular support for extremely large datasets.
 
-### Dendrogram
+### `dendrogram`
 
 The dendrogram allows you to more fully correlate variable completion, revealing trends deeper than the pairwise ones visible in the correlation heatmap:
 
-    >>> msno.dendrogram(collisions)
+```python
+msno.dendrogram(collisions)
+```
 
 ![alt text][dendrogram]
 
@@ -112,26 +115,10 @@ Cluster leaves which split close to zero, but not at it, predict one another ver
 As with `matrix`, only up to 50 labeled columns will comfortably display in this configuration. However the
 `dendrogram` more elegantly handles extremely large datasets by simply flipping to a horizontal configuration.
 
-<!--
-    >>> msno.dendrogram(housing)
-
-![alt text][large-dendrogram]
-
-[large-dendrogram]: http://i.imgur.com/HDa06O9.png
--->
-
-### Configuration
+## configuration
 
 For more advanced configuration details for your plots, refer to the `CONFIGURATION.md` file in this repository.
 
-## Contributing
+## contributing
 
-For thoughts on features or bug reports see [Issues](https://github.com/ResidentMario/missingno/issues). If 
-you're interested in contributing to this library, see details on doing so in the `CONTRIBUTING.md` file in this 
-repository.
-
-## Citation
-
-You may cite this package using the following format (via [this paper](http://joss.theoj.org/papers/52b4115d6c03864b884fbf3334851322)):
-
-> Bilogur, (2018). Missingno: a missing data visualization suite. Journal of Open Source Software, 3(22), 547, https://doi.org/10.21105/joss.00547
+For thoughts on features or bug reports see [Issues](https://github.com/ResidentMario/missingno/issues). If you're interested in contributing to this library, see details on doing so in the `CONTRIBUTING.md` file in this repository.
