@@ -193,14 +193,7 @@ def matrix(df,
         # Remove tick mark (only works after plotting).
         ax1.xaxis.set_ticks_position('none')
 
-    if inline:
-        warnings.warn(
-            "The 'inline' argument has been deprecated, and will be removed in a future version "
-            "of missingno."
-        )
-        plt.show()
-    else:
-        return ax0
+    return ax0
 
 
 def bar(df, figsize=None, fontsize=16, labels=None, log=False, color='dimgray', inline=False,
@@ -232,7 +225,7 @@ def bar(df, figsize=None, fontsize=16, labels=None, log=False, color='dimgray', 
             orientation = 'left'
         else:
             orientation = 'bottom'
-           
+
     if ax is None:
         ax1 = plt.gca()
         if figsize is None:
@@ -248,7 +241,7 @@ def bar(df, figsize=None, fontsize=16, labels=None, log=False, color='dimgray', 
     if orientation == 'bottom':
         (nullity_counts / len(df)).plot.bar(**plot_args)
     else:
-        (nullity_counts / len(df)).plot.barh(**plot_args)                      
+        (nullity_counts / len(df)).plot.barh(**plot_args)
 
     axes = [ax1]
 
@@ -262,13 +255,14 @@ def bar(df, figsize=None, fontsize=16, labels=None, log=False, color='dimgray', 
         if not log:
             ax1.set_ylim([0, 1])
             ax2.set_yticks(ax1.get_yticks())
+            ax2.set_yticklabels([int(n * len(df)) for n in ax1.get_yticks()], fontsize=fontsize)
         else:
             # For some reason when a logarithmic plot is specified `ax1` always contains two more ticks than actually
             # appears in the plot. The fix is to ignore the first and last entries. Also note that when a log scale
             # is used, we have to make it match the `ax1` layout ourselves.
             ax2.set_yscale('log')
             ax2.set_ylim(ax1.get_ylim())
-        ax2.set_yticklabels([int(n*len(df)) for n in ax1.get_yticks()], fontsize=fontsize)
+        ax2.set_yticklabels([int(n * len(df)) for n in ax1.get_yticks()], fontsize=fontsize)
 
         # Create the third axis, which displays columnar totals above the rest of the plot.
         ax3 = ax1.twiny()
@@ -287,7 +281,7 @@ def bar(df, figsize=None, fontsize=16, labels=None, log=False, color='dimgray', 
 
             # Bottom
             ax2.set_xticks(ax1.get_xticks())
-            ax2.set_xticklabels([int(n*len(df)) for n in ax1.get_xticks()], fontsize=fontsize)
+            ax2.set_xticklabels([int(n * len(df)) for n in ax1.get_xticks()], fontsize=fontsize)
 
             # Right
             ax2.set_yticks(ax1.get_yticks())
@@ -301,7 +295,7 @@ def bar(df, figsize=None, fontsize=16, labels=None, log=False, color='dimgray', 
 
             # Bottom
             ax2.set_xticks(ax1.get_xticks())
-            ax2.set_xticklabels([int(n*len(df)) for n in ax1.get_xticks()], fontsize=fontsize)
+            ax2.set_xticklabels([int(n * len(df)) for n in ax1.get_xticks()], fontsize=fontsize)
 
             # Right
             ax2.set_yticks(ax1.get_yticks())
@@ -327,24 +321,17 @@ def bar(df, figsize=None, fontsize=16, labels=None, log=False, color='dimgray', 
         ax.xaxis.set_ticks_position('none')
         ax.yaxis.set_ticks_position('none')
 
-    if inline:
-        warnings.warn(
-            "The 'inline' argument has been deprecated, and will be removed in a future version "
-            "of missingno."
-        )
-        plt.show()
-    else:
-        return ax1
+    return ax1
 
 
 def heatmap(df, inline=False,
             filter=None, n=0, p=0, sort=None,
-            figsize=(20, 12), fontsize=16, labels=True, 
+            figsize=(20, 12), fontsize=16, labels=True,
             cmap='RdBu', vmin=-1, vmax=1, cbar=True, ax=None
             ):
     """
     Presents a `seaborn` heatmap visualization of nullity correlation in the given DataFrame.
-    
+
     Note that this visualization has no special support for large datasets. For those, try the dendrogram instead.
 
     :param df: The DataFrame whose completeness is being heatmapped.
@@ -376,7 +363,7 @@ def heatmap(df, inline=False,
         ax0 = ax
 
     # Remove completely filled or completely empty variables.
-    df = df.iloc[:,[i for i, n in enumerate(np.var(df.isnull(), axis='rows')) if n > 0]]
+    df = df.iloc[:, [i for i, n in enumerate(np.var(df.isnull(), axis='rows')) if n > 0]]
 
     # Create and mask the correlation matrix. Construct the base heatmap.
     corr_mat = df.isnull().corr()
@@ -415,14 +402,7 @@ def heatmap(df, inline=False,
         else:
             text.set_text(round(t, 1))
 
-    if inline:
-        warnings.warn(
-            "The 'inline' argument has been deprecated, and will be removed in a future version "
-            "of missingno."
-        )
-        plt.show()
-    else:
-        return ax0
+    return ax0
 
 
 def dendrogram(df, method='average',
@@ -438,7 +418,7 @@ def dendrogram(df, method='average',
     left unspecified the dendrogram will automatically swap to a horizontal display to fit the additional variables.
 
     :param df: The DataFrame whose completeness is being dendrogrammed.
-    :param method: The distance measure being used for clustering. This is a parameter that is passed to 
+    :param method: The distance measure being used for clustering. This is a parameter that is passed to
     `scipy.hierarchy`.
     :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default).
     :param n: The cap on the number of columns to include in the filtered DataFrame.
@@ -508,93 +488,4 @@ def dendrogram(df, method='average',
     else:
         ax0.tick_params(axis='x', labelsize=int(fontsize / 16 * 20))
 
-    if inline:
-        warnings.warn(
-            "The 'inline' argument has been deprecated, and will be removed in a future version "
-            "of missingno."
-        )
-        plt.show()
-    else:
-        return ax0
-
-
-def geoplot(df,
-            filter=None, n=0, p=0,
-            x=None, y=None, figsize=(25, 10), inline=False,
-            by=None, cmap='YlGn', **kwargs):
-    """
-    Generates a geographical data nullity heatmap, which shows the distribution of missing data across geographic
-    regions. The precise output depends on the inputs provided. If no geographical context is provided, a quadtree
-    is computed and nullities are rendered as abstract geographic squares. If geographical context is provided in the
-    form of a column of geographies (region, borough. ZIP code, etc.) in the `DataFrame`, convex hulls are computed
-    for each of the point groups and the heatmap is generated within them.
-
-    :param df: The DataFrame whose completeness is being geoplotted.
-    :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default).
-    :param n: The cap on the number of columns to include in the filtered DataFrame.
-    :param p: The cap on the percentage fill of the columns in the filtered DataFrame.
-    :param figsize: The size of the figure to display. This is a `matplotlib` parameter which defaults to `(25, 10)`.
-    :param x: The variable in the dataset containing the x-coordinates of the dataset.
-    :param y: The variable in the dataset containing the y-coordinates of the dataset.
-    :param by: If specified, plot in convex hull mode, using the given column to cluster points in the same area. If
-    not specified, plot in quadtree mode.
-    :param cmap: The colormap to display the data with. Defaults to `YlGn`.
-    :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
-    return its figure.
-    :param kwargs: Additional keyword arguments are passed to the underlying `geoplot` function.
-    :return: If `inline` is False, the underlying `matplotlib.figure` object. Else, nothing.
-    """
-    warnings.warn(
-        "The 'geoplot' function has been deprecated, and will be removed in a future version "
-        "of missingno. The 'geoplot' package has an example recipe for a more full-featured "
-        "geospatial nullity plot: "
-        "https://residentmario.github.io/geoplot/gallery/plot_san_francisco_trees.html"
-    )
-    try:
-        import geoplot as gplt
-    except ImportError:
-        raise ImportError("Install geoplot <= 0.2.4 (the package) for geoplot function support")
-
-    if gplt.__version__ >= "0.3.0":
-        raise ImportError(
-            "The missingno geoplot function requires geoplot package version 0.2.4 or lower." 
-            "To use the geoplot function, downgrade to an older version of the geoplot package."
-        )
-
-    import geopandas as gpd
-    from shapely.geometry import Point
-
-    df = nullity_filter(df, filter=filter, n=n, p=p)
-
-    nullity = df.notnull().sum(axis='columns') / df.shape[1]
-    if x and y:
-        gdf = gpd.GeoDataFrame(nullity, columns=['nullity'],
-                               geometry=df.apply(lambda srs: Point(srs[x], srs[y]), axis='columns'))
-    else:
-        raise ValueError("The 'x' and 'y' parameters must be specified.")
-
-    if by:
-        if df[by].isnull().any():
-            warnings.warn('The "{0}" column included null values. The offending records were dropped'.format(by))
-            df = df.dropna(subset=[by])
-            gdf = gdf.loc[df.index]
-
-        vc = df[by].value_counts()
-        if (vc < 3).any():
-            warnings.warn('Grouping by "{0}" included clusters with fewer than three points, which cannot be made '
-                          'polygonal. The offending records were dropped.'.format(by))
-            where = df[by].isin((df[by].value_counts() > 2).where(lambda b: b).dropna().index.values)
-            gdf = gdf.loc[where]
-        gdf[by] = df[by]
-
-    gplt.aggplot(gdf, figsize=figsize, hue='nullity', agg=np.average, cmap=cmap, by=by, edgecolor='None', **kwargs)
-    ax = plt.gca()
-
-    if inline:
-        warnings.warn(
-            "The 'inline' argument has been deprecated, and will be removed in a future version "
-            "of missingno."
-        )
-        plt.show()
-    else:
-        return ax
+    return ax0
