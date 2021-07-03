@@ -3,7 +3,8 @@
 Messy datasets? Missing values? `missingno` provides a small toolset of flexible and easy-to-use missing data
 visualizations and utilities that allows you to get a quick visual summary of the completeness (or lack thereof) of your dataset. Just `pip install missingno` to get started.
 
-## Quickstart [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/ResidentMario/missingno/master?filepath=QuickStart.ipynb)
+## Quickstart
+
 This quickstart uses a sample of the [NYPD Motor Vehicle Collisions Dataset](https://data.cityofnewyork.us/Public-Safety/NYPD-Motor-Vehicle-Collisions/h9gi-nx95) 
 dataset. To get the data yourself, run the following on your command line:
 
@@ -89,7 +90,6 @@ Variables that are always full or always empty have no meaningful correlation, a
 Entries marked `<1` or `>-1` have a correlation that is close to being exactingly negative or positive, but is still not quite perfectly so. This points to a small number of records in the dataset which are erroneous. For example, in this dataset the correlation between `VEHICLE CODE TYPE 3` and `CONTRIBUTING FACTOR VEHICLE 3` is `<1`, indicating that, contrary to our expectation, there are a few records which have one or the other, but not both. These cases will require special attention.
 
 The heatmap works great for picking out data completeness relationships between variable pairs, but its explanatory power is limited when it comes to larger relationships and it has no particular support for extremely large datasets.
-
 
 ### Dendrogram
 
