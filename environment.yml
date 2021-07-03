@@ -1,7 +1,0 @@
-channels:
-  - conda-forge
-  - defaults
-dependencies:
-  - geoplot
-  - pip:
-      - quilt
