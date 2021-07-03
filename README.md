@@ -5,22 +5,12 @@ visualizations and utilities that allows you to get a quick visual summary of th
 
 ## quickstart
 
-This quickstart uses a sample of the [NYPD Motor Vehicle Collisions Dataset](https://data.cityofnewyork.us/Public-Safety/NYPD-Motor-Vehicle-Collisions/h9gi-nx95) dataset. To get the data yourself, run the following on your command line:
-
-```bash
-$ pip install quilt
-$ quilt install ResidentMario/missingno_data
-```
-
-Then to load the data into memory:
+This quickstart uses a sample of the [NYPD Motor Vehicle Collisions Dataset](https://data.cityofnewyork.us/Public-Safety/NYPD-Motor-Vehicle-Collisions/h9gi-nx95) dataset.
 
 ```python
-from quilt.data.ResidentMario import missingno_data
-collisions = missingno_data.nyc_collision_factors()
-collisions = collisions.replace("nan", np.nan)
+import pandas as pd
+collisions = pd.read_csv("https://raw.githubusercontent.com/ResidentMario/missingno-data/master/nyc_collision_factors.csv")
 ```
-
-The rest of this walkthrough will draw from this `collisions` dataset.
 
 ### `matrix`
 
