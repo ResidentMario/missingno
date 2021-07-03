@@ -7,7 +7,9 @@ import pandas as pd
 import numpy as np
 import pytest
 
-import sys; sys.path.append("../")
+import sys
+sys.path.append("../")
+
 import missingno as msno
 import matplotlib.pyplot as plt
 
@@ -121,20 +123,4 @@ class TestDendrogram(unittest.TestCase):
     @pytest.mark.mpl_image_compare
     def test_method_dendrogram(self):
         msno.dendrogram(self.simple_df, method='single')
-        return plt.gcf()
-
-
-class TestGeoplot(unittest.TestCase):
-    """Integration tests only. The main function operations are handled by and tested in the `geoplot` package."""
-
-    def setUp(self):
-        np.random.seed(42)
-        simple_df = pd.DataFrame((np.random.random((20, 10))), columns=range(0, 10))
-        simple_df = simple_df.add_prefix("r")
-        self.x_y_df = simple_df
-
-    # @pytest.mark.mpl_image_compare
-    @pytest.mark.xfail
-    def test_geoplot_quadtree(self):
-        msno.geoplot(self.x_y_df, x='r0', y='r1')
         return plt.gcf()
