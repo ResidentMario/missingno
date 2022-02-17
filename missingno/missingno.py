@@ -13,7 +13,7 @@ def matrix(df,
            filter=None, n=0, p=0, sort=None,
            figsize=(25, 10), width_ratios=(15, 1), color=(0.25, 0.25, 0.25),
            fontsize=16, labels=None, sparkline=True, inline=False,
-           freq=None, ax=None):
+           freq=None, ax=None, title=""):
     """
     A matrix visualization of the nullity of the given DataFrame.
 
@@ -30,6 +30,7 @@ def matrix(df,
     :param width_ratios: The ratio of the width of the matrix to the width of the sparkline. Defaults to `(15, 1)`.
     Does nothing if `sparkline=False`.
     :param color: The color of the filled columns. Default is `(0.25, 0.25, 0.25)`.
+    :param title: Add title to the matrix via ax.set_title.
     :return: If `inline` is False, the underlying `matplotlib.figure` object. Else, nothing.
     """
     df = nullity_filter(df, filter=filter, n=n, p=p)
@@ -52,9 +53,11 @@ def matrix(df,
             gs = gridspec.GridSpec(1, 2, width_ratios=width_ratios)
             gs.update(wspace=0.08)
             ax1 = plt.subplot(gs[1])
+            ax1.set_title(title)
         else:
             gs = gridspec.GridSpec(1, 1)
         ax0 = plt.subplot(gs[0])
+        ax0.set_title(title)
     else:
         if sparkline is not False:
             warnings.warn(
