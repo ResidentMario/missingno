@@ -425,14 +425,14 @@ def dendrogram(
 
     :param df: The DataFrame whose completeness is being dendrogrammed.
     :param method: The distance measure being used for clustering. This is a parameter that is passed to
-    `scipy.hierarchy`.
+        `scipy.hierarchy`.
     :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default).
     :param n: The cap on the number of columns to include in the filtered DataFrame.
     :param p: The cap on the percentage fill of the columns in the filtered DataFrame.
     :param figsize: The size of the figure to display. This is a `matplotlib` parameter which defaults to `(25, 10)`.
     :param fontsize: The figure's font size.
     :param orientation: The way the dendrogram is oriented. Defaults to top-down if there are less than or equal to 50
-    columns and left-right if there are more.
+        columns and left-right if there are more.
     :param label_rotation: What angle to rotate the text labels to. Defaults to 45 degrees.
     :return: The plot axis.
     """
