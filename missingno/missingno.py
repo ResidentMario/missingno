@@ -12,8 +12,7 @@ import warnings
 def matrix(df,
            filter=None, n=0, p=0, sort=None,
            figsize=(25, 10), width_ratios=(15, 1), color=(0.25, 0.25, 0.25),
-           fontsize=16, labels=None, sparkline=True, inline=False,
-           freq=None, ax=None):
+           fontsize=16, labels=None, sparkline=True, freq=None, ax=None):
     """
     A matrix visualization of the nullity of the given DataFrame.
 
@@ -196,8 +195,8 @@ def matrix(df,
     return ax0
 
 
-def bar(df, figsize=None, fontsize=16, labels=None, log=False, color='dimgray', inline=False,
-        filter=None, n=0, p=0, sort=None, ax=None, orientation=None):
+def bar(df, figsize=None, fontsize=16, labels=None, log=False, color='dimgray', filter=None, n=0,
+        p=0, sort=None, ax=None, orientation=None):
     """
     A bar chart visualization of the nullity of the given DataFrame.
 
@@ -324,11 +323,8 @@ def bar(df, figsize=None, fontsize=16, labels=None, log=False, color='dimgray', 
     return ax1
 
 
-def heatmap(df, inline=False,
-            filter=None, n=0, p=0, sort=None,
-            figsize=(20, 12), fontsize=16, labels=True,
-            cmap='RdBu', vmin=-1, vmax=1, cbar=True, ax=None
-            ):
+def heatmap(df, filter=None, n=0, p=0, sort=None, figsize=(20, 12), fontsize=16, labels=True,
+            cmap='RdBu', vmin=-1, vmax=1, cbar=True, ax=None):
     """
     Presents a `seaborn` heatmap visualization of nullity correlation in the given DataFrame.
 
