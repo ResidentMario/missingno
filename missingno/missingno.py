@@ -11,7 +11,8 @@ import warnings
 
 def matrix(
     df, filter=None, n=0, p=0, sort=None, figsize=(25, 10), width_ratios=(15, 1),
-    color=(0.25, 0.25, 0.25), fontsize=16, labels=None, sparkline=True, freq=None, ax=None
+    color=(0.25, 0.25, 0.25), fontsize=16, labels=None, label_rotation=45, sparkline=True,
+    freq=None, ax=None
 ):
     """
     A matrix visualization of the nullity of the given DataFrame.
@@ -24,10 +25,11 @@ def matrix(
     :param figsize: The size of the figure to display.
     :param fontsize: The figure's font size. Default to 16.
     :param labels: Whether or not to display the column names. Defaults to the underlying data labels when there are
-    50 columns or less, and no labels when there are more than 50 columns.
+        50 columns or less, and no labels when there are more than 50 columns.
+    :param label_rotation: What angle to rotate the text labels to. Defaults to 45 degrees.
     :param sparkline: Whether or not to display the sparkline. Defaults to True.
     :param width_ratios: The ratio of the width of the matrix to the width of the sparkline. Defaults to `(15, 1)`.
-    Does nothing if `sparkline=False`.
+        Does nothing if `sparkline=False`.
     :param color: The color of the filled columns. Default is `(0.25, 0.25, 0.25)`.
     :return: The plot axis.
     """
@@ -82,7 +84,7 @@ def matrix(
     if labels or (labels is None and len(df.columns) <= 50):
         ha = 'left'
         ax0.set_xticks(list(range(0, width)))
-        ax0.set_xticklabels(list(df.columns), rotation=45, ha=ha, fontsize=fontsize)
+        ax0.set_xticklabels(list(df.columns), rotation=label_rotation, ha=ha, fontsize=fontsize)
     else:
         ax0.set_xticks([])
 
@@ -164,7 +166,7 @@ def matrix(
             # Set up and rotate the sparkline label.
             ha = 'left'
             ax1.set_xticks([min_completeness + (max_completeness - min_completeness) / 2])
-            ax1.set_xticklabels([label], rotation=45, ha=ha, fontsize=fontsize)
+            ax1.set_xticklabels([label], rotation=label_rotation, ha=ha, fontsize=fontsize)
             ax1.xaxis.tick_top()
             ax1.set_yticks([])
         else:
@@ -196,8 +198,8 @@ def matrix(
 
 
 def bar(
-    df, figsize=None, fontsize=16, labels=None, log=False, color='dimgray', filter=None, n=0, p=0,
-    sort=None, ax=None, orientation=None
+    df, figsize=None, fontsize=16, labels=None, label_rotation=45, log=False, color='dimgray',
+    filter=None, n=0, p=0, sort=None, ax=None, orientation=None
 ):
     """
     A bar chart visualization of the nullity of the given DataFrame.
@@ -211,10 +213,11 @@ def bar(
     :param figsize: The size of the figure to display.
     :param fontsize: The figure's font size. This default to 16.
     :param labels: Whether or not to display the column names. Would need to be turned off on particularly large
-    displays. Defaults to True.
+        displays. Defaults to True.
+    :param label_rotation: What angle to rotate the text labels to. Defaults to 45 degrees.
     :param color: The color of the filled columns. Default to the RGB multiple `(0.25, 0.25, 0.25)`.
     :param orientation: The way the bar plot is oriented. Defaults to vertical if there are less than or equal to 50
-    columns and horizontal if there are more.
+        columns and horizontal if there are more.
     :return: The plot axis.
     """
     df = nullity_filter(df, filter=filter, n=n, p=p)
@@ -248,7 +251,9 @@ def bar(
 
     # Start appending elements, starting with a modified bottom x axis.
     if labels or (labels is None and len(df.columns) <= 50):
-        ax1.set_xticklabels(ax1.get_xticklabels(), rotation=45, ha='right', fontsize=fontsize)
+        ax1.set_xticklabels(
+            ax1.get_xticklabels(), rotation=label_rotation, ha='right', fontsize=fontsize
+        )
 
         # Create the numerical ticks.
         ax2 = ax1.twinx()
@@ -270,7 +275,9 @@ def bar(
         axes.append(ax3)
         ax3.set_xticks(ax1.get_xticks())
         ax3.set_xlim(ax1.get_xlim())
-        ax3.set_xticklabels(nullity_counts.values, fontsize=fontsize, rotation=45, ha='left')
+        ax3.set_xticklabels(
+            nullity_counts.values, fontsize=fontsize, rotation=label_rotation, ha='left'
+        )
     else:
         # Create the numerical ticks.
         ax2 = ax1.twinx()
@@ -326,8 +333,8 @@ def bar(
 
 
 def heatmap(
-    df, filter=None, n=0, p=0, sort=None, figsize=(20, 12), fontsize=16, labels=True, cmap='RdBu',
-    vmin=-1, vmax=1, cbar=True, ax=None
+    df, filter=None, n=0, p=0, sort=None, figsize=(20, 12), fontsize=16, labels=True,
+    label_rotation=45, cmap='RdBu', vmin=-1, vmax=1, cbar=True, ax=None
 ):
     """
     Presents a `seaborn` heatmap visualization of nullity correlation in the given DataFrame.
@@ -336,15 +343,16 @@ def heatmap(
 
     :param df: The DataFrame whose completeness is being heatmapped.
     :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default). See
-    `nullity_filter()` for more information.
+        `nullity_filter()` for more information.
     :param n: The cap on the number of columns to include in the filtered DataFrame. See  `nullity_filter()` for
-    more information.
+        more information.
     :param p: The cap on the percentage fill of the columns in the filtered DataFrame. See  `nullity_filter()` for
-    more information.
+        more information.
     :param sort: The column sort order to apply. Can be "ascending", "descending", or None.
     :param figsize: The size of the figure to display. This is a `matplotlib` parameter which defaults to (20, 12).
     :param fontsize: The figure's font size.
     :param labels: Whether or not to label each matrix entry with its correlation (default is True).
+    :param label_rotation: What angle to rotate the text labels to. Defaults to 45 degrees.
     :param cmap: What `matplotlib` colormap to use. Defaults to `RdBu`.
     :param vmin: The normalized colormap threshold. Defaults to -1, e.g. the bottom of the color scale.
     :param vmax: The normalized colormap threshold. Defaults to 1, e.g. the bottom of the color scale.
@@ -378,8 +386,9 @@ def heatmap(
 
     # Apply visual corrections and modifications.
     ax0.xaxis.tick_bottom()
-    ax0.set_xticklabels(ax0.xaxis.get_majorticklabels(), rotation=45, ha='right', fontsize=fontsize)
-    ax0.set_yticklabels(ax0.yaxis.get_majorticklabels(), fontsize=fontsize, rotation=0)
+    ax0.set_xticklabels(
+        ax0.xaxis.get_majorticklabels(), rotation=label_rotation, ha='right', fontsize=fontsize
+    )
     ax0.set_yticklabels(ax0.yaxis.get_majorticklabels(), rotation=0, fontsize=fontsize)
     ax0.xaxis.set_ticks_position('none')
     ax0.yaxis.set_ticks_position('none')
@@ -405,7 +414,7 @@ def heatmap(
 
 def dendrogram(
     df, method='average', filter=None, n=0, p=0, orientation=None, figsize=None, fontsize=16,
-    ax=None
+    label_rotation=45, ax=None
 ):
     """
     Fits a `scipy` hierarchical clustering algorithm to the given DataFrame's variables and visualizes the results as
@@ -416,14 +425,15 @@ def dendrogram(
 
     :param df: The DataFrame whose completeness is being dendrogrammed.
     :param method: The distance measure being used for clustering. This is a parameter that is passed to
-    `scipy.hierarchy`.
+        `scipy.hierarchy`.
     :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default).
     :param n: The cap on the number of columns to include in the filtered DataFrame.
     :param p: The cap on the percentage fill of the columns in the filtered DataFrame.
     :param figsize: The size of the figure to display. This is a `matplotlib` parameter which defaults to `(25, 10)`.
     :param fontsize: The figure's font size.
     :param orientation: The way the dendrogram is oriented. Defaults to top-down if there are less than or equal to 50
-    columns and left-right if there are more.
+        columns and left-right if there are more.
+    :param label_rotation: What angle to rotate the text labels to. Defaults to 45 degrees.
     :return: The plot axis.
     """
     if not figsize:
@@ -475,9 +485,9 @@ def dendrogram(
 
     # Set up the categorical axis labels and draw.
     if orientation == 'bottom':
-        ax0.set_xticklabels(ax0.xaxis.get_majorticklabels(), rotation=45, ha='left')
+        ax0.set_xticklabels(ax0.xaxis.get_majorticklabels(), rotation=label_rotation, ha='left')
     elif orientation == 'top':
-        ax0.set_xticklabels(ax0.xaxis.get_majorticklabels(), rotation=45, ha='right')
+        ax0.set_xticklabels(ax0.xaxis.get_majorticklabels(), rotation=label_rotation, ha='right')
     if orientation == 'bottom' or orientation == 'top':
         ax0.tick_params(axis='y', labelsize=int(fontsize / 16 * 20))
     else:
