@@ -348,8 +348,6 @@ def heatmap(
     :param cmap: What `matplotlib` colormap to use. Defaults to `RdBu`.
     :param vmin: The normalized colormap threshold. Defaults to -1, e.g. the bottom of the color scale.
     :param vmax: The normalized colormap threshold. Defaults to 1, e.g. the bottom of the color scale.
-    :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
-    return its figure.
     :return: The plot axis.
     """
     # Apply filters and sorts, set up the figure.
