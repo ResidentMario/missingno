@@ -9,11 +9,10 @@ from .utils import nullity_filter, nullity_sort
 import warnings
 
 
-def matrix(df,
-           filter=None, n=0, p=0, sort=None,
-           figsize=(25, 10), width_ratios=(15, 1), color=(0.25, 0.25, 0.25),
-           fontsize=16, labels=None, sparkline=True, inline=False,
-           freq=None, ax=None):
+def matrix(
+    df, filter=None, n=0, p=0, sort=None, figsize=(25, 10), width_ratios=(15, 1),
+    color=(0.25, 0.25, 0.25), fontsize=16, labels=None, sparkline=True, freq=None, ax=None
+):
     """
     A matrix visualization of the nullity of the given DataFrame.
 
@@ -30,7 +29,7 @@ def matrix(df,
     :param width_ratios: The ratio of the width of the matrix to the width of the sparkline. Defaults to `(15, 1)`.
     Does nothing if `sparkline=False`.
     :param color: The color of the filled columns. Default is `(0.25, 0.25, 0.25)`.
-    :return: If `inline` is False, the underlying `matplotlib.figure` object. Else, nothing.
+    :return: The plot axis.
     """
     df = nullity_filter(df, filter=filter, n=n, p=p)
     df = nullity_sort(df, sort=sort, axis='columns')
@@ -196,8 +195,10 @@ def matrix(df,
     return ax0
 
 
-def bar(df, figsize=None, fontsize=16, labels=None, log=False, color='dimgray', inline=False,
-        filter=None, n=0, p=0, sort=None, ax=None, orientation=None):
+def bar(
+    df, figsize=None, fontsize=16, labels=None, log=False, color='dimgray', filter=None, n=0, p=0,
+    sort=None, ax=None, orientation=None
+):
     """
     A bar chart visualization of the nullity of the given DataFrame.
 
@@ -214,7 +215,7 @@ def bar(df, figsize=None, fontsize=16, labels=None, log=False, color='dimgray', 
     :param color: The color of the filled columns. Default to the RGB multiple `(0.25, 0.25, 0.25)`.
     :param orientation: The way the bar plot is oriented. Defaults to vertical if there are less than or equal to 50
     columns and horizontal if there are more.
-    :return: If `inline` is False, the underlying `matplotlib.figure` object. Else, nothing.
+    :return: The plot axis.
     """
     df = nullity_filter(df, filter=filter, n=n, p=p)
     df = nullity_sort(df, sort=sort, axis='rows')
@@ -324,11 +325,10 @@ def bar(df, figsize=None, fontsize=16, labels=None, log=False, color='dimgray', 
     return ax1
 
 
-def heatmap(df, inline=False,
-            filter=None, n=0, p=0, sort=None,
-            figsize=(20, 12), fontsize=16, labels=True,
-            cmap='RdBu', vmin=-1, vmax=1, cbar=True, ax=None
-            ):
+def heatmap(
+    df, filter=None, n=0, p=0, sort=None, figsize=(20, 12), fontsize=16, labels=True, cmap='RdBu',
+    vmin=-1, vmax=1, cbar=True, ax=None
+):
     """
     Presents a `seaborn` heatmap visualization of nullity correlation in the given DataFrame.
 
@@ -348,9 +348,7 @@ def heatmap(df, inline=False,
     :param cmap: What `matplotlib` colormap to use. Defaults to `RdBu`.
     :param vmin: The normalized colormap threshold. Defaults to -1, e.g. the bottom of the color scale.
     :param vmax: The normalized colormap threshold. Defaults to 1, e.g. the bottom of the color scale.
-    :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
-    return its figure.
-    :return: If `inline` is False, the underlying `matplotlib.figure` object. Else, nothing.
+    :return: The plot axis.
     """
     # Apply filters and sorts, set up the figure.
     df = nullity_filter(df, filter=filter, n=n, p=p)
@@ -405,11 +403,10 @@ def heatmap(df, inline=False,
     return ax0
 
 
-def dendrogram(df, method='average',
-               filter=None, n=0, p=0,
-               orientation=None, figsize=None,
-               fontsize=16, inline=False, ax=None
-               ):
+def dendrogram(
+    df, method='average', filter=None, n=0, p=0, orientation=None, figsize=None, fontsize=16,
+    ax=None
+):
     """
     Fits a `scipy` hierarchical clustering algorithm to the given DataFrame's variables and visualizes the results as
     a `scipy` dendrogram.
@@ -427,9 +424,7 @@ def dendrogram(df, method='average',
     :param fontsize: The figure's font size.
     :param orientation: The way the dendrogram is oriented. Defaults to top-down if there are less than or equal to 50
     columns and left-right if there are more.
-    :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
-    return its figure.
-    :return: If `inline` is False, the underlying `matplotlib.figure` object. Else, nothing.
+    :return: The plot axis.
     """
     if not figsize:
         if len(df.columns) <= 50 or orientation == 'top' or orientation == 'bottom':
