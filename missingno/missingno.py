@@ -29,7 +29,7 @@ def matrix(
     :param width_ratios: The ratio of the width of the matrix to the width of the sparkline. Defaults to `(15, 1)`.
     Does nothing if `sparkline=False`.
     :param color: The color of the filled columns. Default is `(0.25, 0.25, 0.25)`.
-    :return: If `inline` is False, the underlying `matplotlib.figure` object. Else, nothing.
+    :return: The plot axis.
     """
     df = nullity_filter(df, filter=filter, n=n, p=p)
     df = nullity_sort(df, sort=sort, axis='columns')
@@ -215,7 +215,7 @@ def bar(
     :param color: The color of the filled columns. Default to the RGB multiple `(0.25, 0.25, 0.25)`.
     :param orientation: The way the bar plot is oriented. Defaults to vertical if there are less than or equal to 50
     columns and horizontal if there are more.
-    :return: If `inline` is False, the underlying `matplotlib.figure` object. Else, nothing.
+    :return: The plot axis.
     """
     df = nullity_filter(df, filter=filter, n=n, p=p)
     df = nullity_sort(df, sort=sort, axis='rows')
@@ -350,7 +350,7 @@ def heatmap(
     :param vmax: The normalized colormap threshold. Defaults to 1, e.g. the bottom of the color scale.
     :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
     return its figure.
-    :return: If `inline` is False, the underlying `matplotlib.figure` object. Else, nothing.
+    :return: The plot axis.
     """
     # Apply filters and sorts, set up the figure.
     df = nullity_filter(df, filter=filter, n=n, p=p)
@@ -426,9 +426,7 @@ def dendrogram(
     :param fontsize: The figure's font size.
     :param orientation: The way the dendrogram is oriented. Defaults to top-down if there are less than or equal to 50
     columns and left-right if there are more.
-    :param inline: Whether or not the figure is inline. If it's not then instead of getting plotted, this method will
-    return its figure.
-    :return: If `inline` is False, the underlying `matplotlib.figure` object. Else, nothing.
+    :return: The plot axis.
     """
     if not figsize:
         if len(df.columns) <= 50 or orientation == 'top' or orientation == 'bottom':
