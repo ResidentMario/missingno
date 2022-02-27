@@ -1,4 +1,4 @@
-# missingno [![PyPi version](https://img.shields.io/pypi/v/missingno.svg)](https://pypi.python.org/pypi/missingno/) [![](https://img.shields.io/badge/python-3.4+-blue.svg)](https://www.python.org/downloads/) ![t](https://img.shields.io/badge/status-stable-green.svg) [![](https://img.shields.io/github/license/ResidentMario/missingno.svg)](https://github.com/ResidentMario/missingno/blob/master/LICENSE.md) [![](https://img.shields.io/badge/doi-10.21105/joss.00547+-blue.svg)](https://joss.theoj.org/papers/10.21105/joss.00547)
+# missingno [![PyPi version](https://img.shields.io/pypi/v/missingno.svg)](https://pypi.python.org/pypi/missingno/) [![](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/) ![t](https://img.shields.io/badge/status-maintained-yellow.svg) [![](https://img.shields.io/github/license/ResidentMario/missingno.svg)](https://github.com/ResidentMario/missingno/blob/master/LICENSE.md) [![](https://img.shields.io/badge/doi-10.21105/joss.00547+-blue.svg)](https://joss.theoj.org/papers/10.21105/joss.00547)
 
 Messy datasets? Missing values? `missingno` provides a small toolset of flexible and easy-to-use missing data
 visualizations and utilities that allows you to get a quick visual summary of the completeness (or lack thereof) of your dataset. Just `pip install missingno` to get started.
@@ -132,4 +132,4 @@ For more advanced configuration details for your plots, refer to the `CONFIGURAT
 
 ## contributing
 
-For thoughts on features or bug reports see [Issues](https://github.com/ResidentMario/missingno/issues). If you're interested in contributing to this library, see details on doing so in the `CONTRIBUTING.md` file in this repository.
+For thoughts on features or bug reports see [Issues](https://github.com/ResidentMario/missingno/issues). If you're interested in contributing to this library, see details on doing so in the `CONTRIBUTING.md` file in this repository. If doing so, keep in mind that `missingno` is currently in a maintenence state, so while bugfixes are welcome, I am unlikely to review or land any new major library features.
