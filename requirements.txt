@@ -1,9 +1,0 @@
-geopandas
-geoplot
-shapely
-pytest
-pytest-mpl
-numpy
-matplotlib
-scipy
-seaborn
