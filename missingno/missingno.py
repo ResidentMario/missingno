@@ -70,7 +70,7 @@ def matrix(
 
     # Remove extraneous default visual elements.
     ax0.set_aspect('auto')
-    ax0.grid(b=False)
+    ax0.grid(visible=False)
     ax0.xaxis.tick_top()
     ax0.xaxis.set_ticks_position('none')
     ax0.yaxis.set_ticks_position('none')
@@ -139,7 +139,7 @@ def matrix(
         max_completeness_index = y_range.index(max_completeness)
 
         # Set up the sparkline, remove the border element.
-        ax1.grid(b=False)
+        ax1.grid(visible=False)
         ax1.set_aspect('auto')
         # GH 25
         if int(mpl.__version__[0]) <= 1:
@@ -472,7 +472,7 @@ def dendrogram(
 
     # Remove extraneous default visual elements.
     ax0.set_aspect('auto')
-    ax0.grid(b=False)
+    ax0.grid(visible=False)
     if orientation == 'bottom':
         ax0.xaxis.tick_top()
     ax0.xaxis.set_ticks_position('none')
