@@ -5,8 +5,9 @@ import matplotlib.pyplot as plt
 from scipy.cluster import hierarchy
 import seaborn as sns
 import pandas as pd
-from .utils import nullity_filter, nullity_sort
+from .utils import nullity_filter, nullity_sort, pearson_corr
 import warnings
+import narwhals as nw
 
 
 def matrix(
@@ -33,14 +34,17 @@ def matrix(
     :param color: The color of the filled columns. Default is `(0.25, 0.25, 0.25)`.
     :return: The plot axis.
     """
+    
     df = nullity_filter(df, filter=filter, n=n, p=p)
     df = nullity_sort(df, sort=sort, axis='columns')
-
+    df_nw = nw.from_native(df) #let's create a narwhal dataframe
     height = df.shape[0]
     width = df.shape[1]
 
     # z is the color-mask array, g is a NxNx3 matrix. Apply the z color-mask to set the RGB of each pixel.
-    z = df.notnull().values
+    
+    res = df_nw.select(~nw.all().is_null()) #creating a nullity mask
+    z = res.to_numpy()
     g = np.zeros((height, width, 3), dtype=np.float32)
 
     g[z < 0.5] = [1, 1, 1]
@@ -81,58 +85,60 @@ def matrix(
 
     # Set up and rotate the column ticks. The labels argument is set to None by default. If the user specifies it in
     # the argument, respect that specification. Otherwise display for <= 50 columns and do not display for > 50.
-    if labels or (labels is None and len(df.columns) <= 50):
+    if labels or (labels is None and len(df_nw.columns) <= 50):
         ha = 'left'
         ax0.set_xticks(list(range(0, width)))
-        ax0.set_xticklabels(list(df.columns), rotation=label_rotation, ha=ha, fontsize=fontsize)
+        ax0.set_xticklabels(list(df_nw.columns), rotation=label_rotation, ha=ha, fontsize=fontsize)
     else:
         ax0.set_xticks([])
 
     # Adds Timestamps ticks if freq is not None, else set up the two top-bottom row ticks.
-    if freq:
-        ts_list = []
+    # if freq:
+    #     ts_list = []
 
-        if type(df.index) == pd.PeriodIndex:
-            ts_array = pd.date_range(df.index.to_timestamp().date[0],
-                                     df.index.to_timestamp().date[-1],
-                                     freq=freq).values
+    #     if type(df.index) == pd.PeriodIndex:
+    #         ts_array = pd.date_range(df.index.to_timestamp().date[0],
+    #                                  df.index.to_timestamp().date[-1],
+    #                                  freq=freq).values
 
-            ts_ticks = pd.date_range(df.index.to_timestamp().date[0],
-                                     df.index.to_timestamp().date[-1],
-                                     freq=freq).map(lambda t:
-                                                    t.strftime('%Y-%m-%d'))
+    #         ts_ticks = pd.date_range(df.index.to_timestamp().date[0],
+    #                                  df.index.to_timestamp().date[-1],
+    #                                  freq=freq).map(lambda t:
+    #                                                 t.strftime('%Y-%m-%d'))
 
-        elif type(df.index) == pd.DatetimeIndex:
-            ts_array = pd.date_range(df.index[0], df.index[-1],
-                                     freq=freq).values
+    #     elif type(df.index) == pd.DatetimeIndex:
+    #         ts_array = pd.date_range(df.index[0], df.index[-1],
+    #                                  freq=freq).values
 
-            ts_ticks = pd.date_range(df.index[0], df.index[-1],
-                                     freq=freq).map(lambda t:
-                                                    t.strftime('%Y-%m-%d'))
-        else:
-            raise KeyError('Dataframe index must be PeriodIndex or DatetimeIndex.')
-        try:
-            for value in ts_array:
-                ts_list.append(df.index.get_loc(value))
-        except KeyError:
-            raise KeyError('Could not divide time index into desired frequency.')
+    #         ts_ticks = pd.date_range(df.index[0], df.index[-1],
+    #                                  freq=freq).map(lambda t:
+    #                                                 t.strftime('%Y-%m-%d'))
+    #     else:
+    #         raise KeyError('Dataframe index must be PeriodIndex or DatetimeIndex.')
+    #     try:
+    #         for value in ts_array:
+    #             ts_list.append(df.index.get_loc(value))
+    #     except KeyError:
+    #         raise KeyError('Could not divide time index into desired frequency.')
 
-        ax0.set_yticks(ts_list)
-        ax0.set_yticklabels(ts_ticks, fontsize=int(fontsize / 16 * 20), rotation=0)
-    else:
-        ax0.set_yticks([0, df.shape[0] - 1])
-        ax0.set_yticklabels([1, df.shape[0]], fontsize=int(fontsize / 16 * 20), rotation=0)
+    #     ax0.set_yticks(ts_list)
+    #     ax0.set_yticklabels(ts_ticks, fontsize=int(fontsize / 16 * 20), rotation=0)
+    # else:
+    #     ax0.set_yticks([0, df.shape[0] - 1])
+    #     ax0.set_yticklabels([1, df.shape[0]], fontsize=int(fontsize / 16 * 20), rotation=0)
 
     # Create the inter-column vertical grid.
     in_between_point = [x + 0.5 for x in range(0, width - 1)]
     for in_between_point in in_between_point:
         ax0.axvline(in_between_point, linestyle='-', color='white')
 
+    breakpoint()
     if sparkline:
         # Calculate row-wise completeness for the sparkline.
-        completeness_srs = df.notnull().astype(bool).sum(axis=1)
+        #cols = df_nw.columns
+        completeness_srs = df_nw.select(sum=nw.sum_horizontal((~nw.all().is_null()).cast(nw.UInt8)))
         x_domain = list(range(0, height))
-        y_range = list(reversed(completeness_srs.values))
+        y_range = list(reversed(completeness_srs["sum"].to_list()))
         min_completeness = min(y_range)
         max_completeness = max(y_range)
         min_completeness_index = y_range.index(min_completeness)
@@ -198,7 +204,7 @@ def matrix(
 
 
 def bar(
-    df, figsize=None, fontsize=16, labels=None, label_rotation=45, log=False, color='dimgray',
+    df, figsize=[25.,10.], fontsize=16, labels=None, label_rotation=45, log=False, color='dimgray',
     filter=None, n=0, p=0, sort=None, ax=None, orientation=None
 ):
     """
@@ -220,37 +226,45 @@ def bar(
         columns and horizontal if there are more.
     :return: The plot axis.
     """
+    
     df = nullity_filter(df, filter=filter, n=n, p=p)
     df = nullity_sort(df, sort=sort, axis='rows')
-    nullity_counts = len(df) - df.isnull().sum()
+    df_nw = nw.from_native(df)
+
+    nullity_counts = df_nw.select(nw.all().is_null().sum() * -1 + len(df_nw)).to_numpy().flatten()
+    plt.rcParams['figure.figsize'] = figsize
 
     if orientation is None:
-        if len(df.columns) > 50:
+        if len(df_nw.columns) > 50:
             orientation = 'left'
         else:
             orientation = 'bottom'
 
+
     if ax is None:
         ax1 = plt.gca()
-        if figsize is None:
-            if len(df.columns) <= 50 or orientation == 'top' or orientation == 'bottom':
-                figsize = (25, 10)
-            else:
-                figsize = (25, (25 + len(df.columns) - 50) * 0.5)
+        if len(df_nw.columns) <= 50 or orientation == 'top' or orientation == 'bottom':
+            figsize = (25, 10)
+        else:
+            figsize = (25, (25 + len(df_nw.columns) - 50) * 0.5)
+        
     else:
         ax1 = ax
         figsize = None  # for behavioral consistency with other plot types, re-use the given size
 
-    plot_args = {'figsize': figsize, 'fontsize': fontsize, 'log': log, 'color': color, 'ax': ax1}
-    if orientation == 'bottom':
-        (nullity_counts / len(df)).plot.bar(**plot_args)
-    else:
-        (nullity_counts / len(df)).plot.barh(**plot_args)
 
+    
+
+    if orientation == 'bottom':
+        ax1.bar(x=df_nw.columns, height = nullity_counts / len(df_nw), color = color) 
+    else:
+        ax1.barh(y=df_nw.columns, width = nullity_counts / len(df_nw), color = color) 
+
+    
     axes = [ax1]
 
-    # Start appending elements, starting with a modified bottom x axis.
-    if labels or (labels is None and len(df.columns) <= 50):
+    if labels or (labels is None and len(df_nw.columns) <= 50):
+        ax1.set_xticks(range(len(ax1.get_xticklabels())))
         ax1.set_xticklabels(
             ax1.get_xticklabels(), rotation=label_rotation, ha='right', fontsize=fontsize
         )
@@ -261,14 +275,14 @@ def bar(
         if not log:
             ax1.set_ylim([0, 1])
             ax2.set_yticks(ax1.get_yticks())
-            ax2.set_yticklabels([int(n * len(df)) for n in ax1.get_yticks()], fontsize=fontsize)
+            ax2.set_yticklabels([int(n * len(df_nw)) for n in ax1.get_yticks()], fontsize=fontsize)
         else:
             # For some reason when a logarithmic plot is specified `ax1` always contains two more ticks than actually
             # appears in the plot. The fix is to ignore the first and last entries. Also note that when a log scale
             # is used, we have to make it match the `ax1` layout ourselves.
             ax2.set_yscale('log')
             ax2.set_ylim(ax1.get_ylim())
-        ax2.set_yticklabels([int(n * len(df)) for n in ax1.get_yticks()], fontsize=fontsize)
+        ax2.set_yticklabels([int(n * len(df_nw)) for n in ax1.get_yticks()], fontsize=fontsize)
 
         # Create the third axis, which displays columnar totals above the rest of the plot.
         ax3 = ax1.twiny()
@@ -276,7 +290,7 @@ def bar(
         ax3.set_xticks(ax1.get_xticks())
         ax3.set_xlim(ax1.get_xlim())
         ax3.set_xticklabels(
-            nullity_counts.values, fontsize=fontsize, rotation=label_rotation, ha='left'
+            nullity_counts, fontsize=fontsize, rotation=label_rotation, ha='left'
         )
     else:
         # Create the numerical ticks.
@@ -293,7 +307,7 @@ def bar(
 
             # Right
             ax2.set_yticks(ax1.get_yticks())
-            ax2.set_yticklabels(nullity_counts.values, fontsize=fontsize, ha='left')
+            ax2.set_yticklabels(nullity_counts, fontsize=fontsize, ha='left')
         else:
             # For some reason when a logarithmic plot is specified `ax1` always contains two more ticks than actually
             # appears in the plot. The fix is to ignore the first and last entries. Also note that when a log scale
@@ -307,7 +321,7 @@ def bar(
 
             # Right
             ax2.set_yticks(ax1.get_yticks())
-            ax2.set_yticklabels(nullity_counts.values, fontsize=fontsize, ha='left')
+            ax2.set_yticklabels(nullity_counts, fontsize=fontsize, ha='left')
 
         # Create the third axis, which displays columnar totals above the rest of the plot.
         ax3 = ax1.twiny()
@@ -320,7 +334,7 @@ def bar(
         ax3.set_ylim(ax1.get_ylim())
 
     ax3.grid(False)
-
+    
     for ax in axes:
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
@@ -328,7 +342,7 @@ def bar(
         ax.spines['left'].set_visible(False)
         ax.xaxis.set_ticks_position('none')
         ax.yaxis.set_ticks_position('none')
-
+    
     return ax1
 
 
@@ -361,6 +375,7 @@ def heatmap(
     # Apply filters and sorts, set up the figure.
     df = nullity_filter(df, filter=filter, n=n, p=p)
     df = nullity_sort(df, sort=sort, axis='rows')
+    df_nw = nw.from_native(df)
 
     if ax is None:
         plt.figure(figsize=figsize)
@@ -369,19 +384,32 @@ def heatmap(
         ax0 = ax
 
     # Remove completely filled or completely empty variables.
-    df = df.iloc[:, [i for i, n in enumerate(np.var(df.isnull(), axis='rows')) if n > 0]]
-
+    # df = df.iloc[:, [i for i, n in enumerate(np.var(df.isnull(), axis='rows')) if n > 0]]
+    null_df = df_nw.select(nw.all().is_null().cast(nw.UInt8()))
+    variance = null_df.select([nw.col(col).std() for col in null_df.columns]) #std is ) then variance is 0 as well
+    filtered_columns = [col for col, var in zip(df_nw.columns, variance.row(0)) if var > 0] #pyarrpw tu ne ogarnia tego col,var
+    filtered_df = null_df.select(filtered_columns)
     # Create and mask the correlation matrix. Construct the base heatmap.
-    corr_mat = df.isnull().corr()
-    mask = np.zeros_like(corr_mat)
+    #corr_mat = df.isnull().corr()
+    corr_matrix = filtered_df.drop(filtered_df.columns)
+    breakpoint()
+    for col1 in filtered_df.columns:
+        row = []
+        for col2 in filtered_df.columns:
+            corr = pearson_corr(filtered_df[col1], filtered_df[col2])
+            row.append(corr)
+        ser = nw.new_series(col1, row, native_namespace=nw.get_native_namespace(df_nw))
+        corr_matrix = corr_matrix.with_columns(ser) #obczaj w pdb dlaczego jest mismatch dlugosci
+        
+    mask = np.zeros_like(corr_matrix)
     mask[np.triu_indices_from(mask)] = True
 
     if labels:
-        sns.heatmap(corr_mat, mask=mask, cmap=cmap, ax=ax0, cbar=cbar,
+        sns.heatmap(nw.to_native(corr_matrix), mask=mask, cmap=cmap, ax=ax0, cbar=cbar,
                     annot=True, annot_kws={'size': fontsize - 2},
                     vmin=vmin, vmax=vmax)
     else:
-        sns.heatmap(corr_mat, mask=mask, cmap=cmap, ax=ax0, cbar=cbar,
+        sns.heatmap(nw.to_native(corr_matrix), mask=mask, cmap=cmap, ax=ax0, cbar=cbar,
                     vmin=vmin, vmax=vmax)
 
     # Apply visual corrections and modifications.
@@ -412,85 +440,85 @@ def heatmap(
     return ax0
 
 
-def dendrogram(
-    df, method='average', filter=None, n=0, p=0, orientation=None, figsize=None, fontsize=16,
-    label_rotation=45, ax=None
-):
-    """
-    Fits a `scipy` hierarchical clustering algorithm to the given DataFrame's variables and visualizes the results as
-    a `scipy` dendrogram.
+# def dendrogram(
+#     df, method='average', filter=None, n=0, p=0, orientation=None, figsize=None, fontsize=16,
+#     label_rotation=45, ax=None
+# ):
+#     """
+#     Fits a `scipy` hierarchical clustering algorithm to the given DataFrame's variables and visualizes the results as
+#     a `scipy` dendrogram.
 
-    The default vertical display will fit up to 50 columns. If more than 50 columns are specified and orientation is
-    left unspecified the dendrogram will automatically swap to a horizontal display to fit the additional variables.
+#     The default vertical display will fit up to 50 columns. If more than 50 columns are specified and orientation is
+#     left unspecified the dendrogram will automatically swap to a horizontal display to fit the additional variables.
 
-    :param df: The DataFrame whose completeness is being dendrogrammed.
-    :param method: The distance measure being used for clustering. This is a parameter that is passed to
-        `scipy.hierarchy`.
-    :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default).
-    :param n: The cap on the number of columns to include in the filtered DataFrame.
-    :param p: The cap on the percentage fill of the columns in the filtered DataFrame.
-    :param figsize: The size of the figure to display. This is a `matplotlib` parameter which defaults to `(25, 10)`.
-    :param fontsize: The figure's font size.
-    :param orientation: The way the dendrogram is oriented. Defaults to top-down if there are less than or equal to 50
-        columns and left-right if there are more.
-    :param label_rotation: What angle to rotate the text labels to. Defaults to 45 degrees.
-    :return: The plot axis.
-    """
-    if not figsize:
-        if len(df.columns) <= 50 or orientation == 'top' or orientation == 'bottom':
-            figsize = (25, 10)
-        else:
-            figsize = (25, (25 + len(df.columns) - 50) * 0.5)
+#     :param df: The DataFrame whose completeness is being dendrogrammed.
+#     :param method: The distance measure being used for clustering. This is a parameter that is passed to
+#         `scipy.hierarchy`.
+#     :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default).
+#     :param n: The cap on the number of columns to include in the filtered DataFrame.
+#     :param p: The cap on the percentage fill of the columns in the filtered DataFrame.
+#     :param figsize: The size of the figure to display. This is a `matplotlib` parameter which defaults to `(25, 10)`.
+#     :param fontsize: The figure's font size.
+#     :param orientation: The way the dendrogram is oriented. Defaults to top-down if there are less than or equal to 50
+#         columns and left-right if there are more.
+#     :param label_rotation: What angle to rotate the text labels to. Defaults to 45 degrees.
+#     :return: The plot axis.
+#     """
+#     if not figsize:
+#         if len(df.columns) <= 50 or orientation == 'top' or orientation == 'bottom':
+#             figsize = (25, 10)
+#         else:
+#             figsize = (25, (25 + len(df.columns) - 50) * 0.5)
 
-    if ax is None:
-        plt.figure(figsize=figsize)
-        ax0 = plt.gca()
-    else:
-        ax0 = ax
+#     if ax is None:
+#         plt.figure(figsize=figsize)
+#         ax0 = plt.gca()
+#     else:
+#         ax0 = ax
 
-    df = nullity_filter(df, filter=filter, n=n, p=p)
+#     df = nullity_filter(df, filter=filter, n=n, p=p)
 
-    # Link the hierarchical output matrix, figure out orientation, construct base dendrogram.
-    x = np.transpose(df.isnull().astype(int).values)
-    z = hierarchy.linkage(x, method)
+#     # Link the hierarchical output matrix, figure out orientation, construct base dendrogram.
+#     x = np.transpose(df.isnull().astype(int).values)
+#     z = hierarchy.linkage(x, method)
 
-    if not orientation:
-        if len(df.columns) > 50:
-            orientation = 'left'
-        else:
-            orientation = 'bottom'
+#     if not orientation:
+#         if len(df.columns) > 50:
+#             orientation = 'left'
+#         else:
+#             orientation = 'bottom'
 
-    hierarchy.dendrogram(
-        z,
-        orientation=orientation,
-        labels=df.columns.tolist(),
-        distance_sort='descending',
-        link_color_func=lambda c: 'black',
-        leaf_font_size=fontsize,
-        ax=ax0
-    )
+#     hierarchy.dendrogram(
+#         z,
+#         orientation=orientation,
+#         labels=df.columns.tolist(),
+#         distance_sort='descending',
+#         link_color_func=lambda c: 'black',
+#         leaf_font_size=fontsize,
+#         ax=ax0
+#     )
 
-    # Remove extraneous default visual elements.
-    ax0.set_aspect('auto')
-    ax0.grid(visible=False)
-    if orientation == 'bottom':
-        ax0.xaxis.tick_top()
-    ax0.xaxis.set_ticks_position('none')
-    ax0.yaxis.set_ticks_position('none')
-    ax0.spines['top'].set_visible(False)
-    ax0.spines['right'].set_visible(False)
-    ax0.spines['bottom'].set_visible(False)
-    ax0.spines['left'].set_visible(False)
-    ax0.patch.set_visible(False)
+#     # Remove extraneous default visual elements.
+#     ax0.set_aspect('auto')
+#     ax0.grid(visible=False)
+#     if orientation == 'bottom':
+#         ax0.xaxis.tick_top()
+#     ax0.xaxis.set_ticks_position('none')
+#     ax0.yaxis.set_ticks_position('none')
+#     ax0.spines['top'].set_visible(False)
+#     ax0.spines['right'].set_visible(False)
+#     ax0.spines['bottom'].set_visible(False)
+#     ax0.spines['left'].set_visible(False)
+#     ax0.patch.set_visible(False)
 
-    # Set up the categorical axis labels and draw.
-    if orientation == 'bottom':
-        ax0.set_xticklabels(ax0.xaxis.get_majorticklabels(), rotation=label_rotation, ha='left')
-    elif orientation == 'top':
-        ax0.set_xticklabels(ax0.xaxis.get_majorticklabels(), rotation=label_rotation, ha='right')
-    if orientation == 'bottom' or orientation == 'top':
-        ax0.tick_params(axis='y', labelsize=int(fontsize / 16 * 20))
-    else:
-        ax0.tick_params(axis='x', labelsize=int(fontsize / 16 * 20))
+#     # Set up the categorical axis labels and draw.
+#     if orientation == 'bottom':
+#         ax0.set_xticklabels(ax0.xaxis.get_majorticklabels(), rotation=label_rotation, ha='left')
+#     elif orientation == 'top':
+#         ax0.set_xticklabels(ax0.xaxis.get_majorticklabels(), rotation=label_rotation, ha='right')
+#     if orientation == 'bottom' or orientation == 'top':
+#         ax0.tick_params(axis='y', labelsize=int(fontsize / 16 * 20))
+#     else:
+#         ax0.tick_params(axis='x', labelsize=int(fontsize / 16 * 20))
 
-    return ax0
+#     return ax0
