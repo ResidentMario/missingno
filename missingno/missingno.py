@@ -413,8 +413,8 @@ def heatmap(
 
 
 def dendrogram(
-    df, method='average', filter=None, n=0, p=0, orientation=None, figsize=None, fontsize=16,
-    label_rotation=45, ax=None
+    df, method='average', metric='euclidean', filter=None, n=0, p=0, orientation=None,
+    figsize=None, fontsize=16, label_rotation=45, ax=None
 ):
     """
     Fits a `scipy` hierarchical clustering algorithm to the given DataFrame's variables and visualizes the results as
@@ -422,10 +422,23 @@ def dendrogram(
 
     The default vertical display will fit up to 50 columns. If more than 50 columns are specified and orientation is
     left unspecified the dendrogram will automatically swap to a horizontal display to fit the additional variables.
-
     :param df: The DataFrame whose completeness is being dendrogrammed.
     :param method: The distance measure being used for clustering. This is a parameter that is passed to
         `scipy.hierarchy`.
+
+    :param metric: The distance metric for clustering. Defaults to "euclidean".
+                   Available options include:
+                   - "euclidean": Standard geometric distance, commonly used for continuous data.
+                   - "cityblock" (or "manhattan"): Sum of absolute differences, suitable for high-dimensional data.
+                   - "cosine": Cosine of the angle between two vectors, ideal for text or high-dimensional data.
+                   - "hamming": Proportion of differing elements, recommended for binary data (e.g., presence/absence).
+                   - "jaccard": Ratio of intersection to union, also recommended for binary or sparse data.
+                   - "chebyshev": Maximum difference along any coordinate dimension.
+                   - "minkowski": Generalized distance metric (parameterized by `p`); Euclidean if `p=2`, Manhattan if `p=1`.
+                   - "braycurtis": Dissimilarity measure, often used in ecological data comparisons.
+                   - "canberra": Sum of ratio differences; sensitive to small changes, useful for environmental data.
+                   - "correlation": 1 minus the Pearson correlation; good for continuous data and pattern similarity.
+
     :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default).
     :param n: The cap on the number of columns to include in the filtered DataFrame.
     :param p: The cap on the percentage fill of the columns in the filtered DataFrame.
@@ -450,9 +463,9 @@ def dendrogram(
 
     df = nullity_filter(df, filter=filter, n=n, p=p)
 
-    # Link the hierarchical output matrix, figure out orientation, construct base dendrogram.
+    # NOTE: A new `metric` parameter allows for alternate distance measures such as "hamming" or "jaccard"
     x = np.transpose(df.isnull().astype(int).values)
-    z = hierarchy.linkage(x, method)
+    z = hierarchy.linkage(x, method=method, metric=metric)
 
     if not orientation:
         if len(df.columns) > 50:
