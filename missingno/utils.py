@@ -14,6 +14,20 @@ def pearson_corr(col1, col2):
     n = len(col1)
     return sum_of_products / ((n - 1) * std1 * std2)
 
+def sort_horizontal(df, sort):
+    df_null = df.null_count()
+    values = [df_null[col].sum() for col in list(df_null.columns)]
+
+    if sort == 'ascending':
+        sorted_data = sorted(list(zip(values, df_null.columns)))
+    else:
+        sorted_data = sorted(list(zip(values, df_null.columns)), reverse=True)
+
+    _, sorted_cols = zip(*sorted_data)
+
+    return df.select(sorted_cols)
+
+
 @nw.narwhalify
 def nullity_sort(df, sort=None, axis='columns'):
     """
@@ -23,27 +37,31 @@ def nullity_sort(df, sort=None, axis='columns'):
     :param sort: The sorting method: either "ascending", "descending", or None (default).
     :return: The nullity-sorted DataFrame.
     """
+    if sort is None:
+        return df
+    elif sort not in ['ascending', 'descending']:
+        raise ValueError('The "sort" parameter must be set to "ascending" or "descending".')
+    
+    if axis not in ['rows', 'columns']:
+        raise ValueError('The "axis" parameter must be set to "rows" or "columns".')
+    
+    
+    if axis == 'columns':
+        if sort == 'ascending':
+            return df.with_columns(non_nulls=nw.sum_horizontal((~nw.all().is_null()).cast(nw.UInt8))).sort('non_nulls').drop('non_nulls')
+        elif sort == 'descending':
+            return df.with_columns(non_nulls=nw.sum_horizontal((nw.all().is_null()).cast(nw.UInt8))).sort('non_nulls').drop('non_nulls')
+    elif axis == 'rows':
+        if sort == 'ascending':
+            return sort_horizontal(df, sort) #df.null_count() a potem jakos to posortowac i uporzadkowac columny
+        elif sort == 'descending':
+            return sort_horizontal(df, sort)       
+        
     return df
-    # if sort is None:
-    #     return df
-    # elif sort not in ['ascending', 'descending']:
-    #     raise ValueError('The "sort" parameter must be set to "ascending" or "descending".')
 
-    # if axis not in ['rows', 'columns']:
-    #     raise ValueError('The "axis" parameter must be set to "rows" or "columns".')
 
-    # if axis == 'columns':
-    #     if sort == 'ascending':
-    #         return df.iloc[np.argsort(df.count(axis='columns').values), :]
-    #     elif sort == 'descending':
-    #         return df.iloc[np.flipud(np.argsort(df.count(axis='columns').values)), :]
-    # elif axis == 'rows':
-    #     if sort == 'ascending':
-    #         return df.iloc[:, np.argsort(df.count(axis='rows').values)]
-    #     elif sort == 'descending':
-    #         return df.iloc[:, np.flipud(np.argsort(df.count(axis='rows').values))]
 
-@nw.narwhalify
+
 def nullity_filter(df, filter=None, p=0, n=0):
     """
     Filters a DataFrame according to its nullity, using some combination of 'top' and 'bottom' numerical and

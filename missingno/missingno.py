@@ -36,7 +36,7 @@ def matrix(
     """
     
     df = nullity_filter(df, filter=filter, n=n, p=p)
-    df = nullity_sort(df, sort=sort, axis='columns')
+    df = nullity_sort(df, sort=sort, axis='rows')
     df_nw = nw.from_native(df) #let's create a narwhal dataframe
     height = df.shape[0]
     width = df.shape[1]
@@ -347,7 +347,7 @@ def bar(
 
 
 def heatmap(
-    df, filter=None, n=0, p=0, sort=None, figsize=(20, 12), fontsize=16, labels=True,
+    df, filter=None, n=0, p=0, sort=None, figsize=(20, 12), fontsize=10, labels=True,
     label_rotation=45, cmap='RdBu', vmin=-1, vmax=1, cbar=True, ax=None
 ):
     """
@@ -377,148 +377,134 @@ def heatmap(
     df = nullity_sort(df, sort=sort, axis='rows')
     df_nw = nw.from_native(df)
 
+    # if ax is None:
+    #     plt.figure(figsize=figsize)
+    #     ax0 = plt.gca()
+    # else:
+    #     ax0 = ax
+
+
+    null_df = df_nw.select(nw.all().is_null().cast(nw.UInt8()))
+    variance = null_df.select([nw.col(col).std() for col in null_df.columns]) #std is ) then variance is 0 as well
+    filtered_columns = [col for col, var in zip(df_nw.columns, variance.row(0)) if var > 0] #pyarrpw tu ne ogarnia tego col,var
+    filtered_df = null_df.select(filtered_columns)
+   
+    corr_matrix = np.zeros((len(filtered_df.columns), len(filtered_df.columns)))
+    for i, col1 in enumerate(filtered_df.columns):
+        for j, col2 in enumerate(filtered_df.columns):
+            corr_matrix[i, j] = pearson_corr(filtered_df[col1], filtered_df[col2])
+
+    mask = np.triu(np.ones_like(corr_matrix, dtype=bool))
+    masked_corr_matrix = np.ma.array(corr_matrix, mask=mask)
+
+    fig, ax = plt.subplots()
+    cax = ax.matshow(masked_corr_matrix, cmap='coolwarm', vmin=-1, vmax=1)
+
+    fig.colorbar(cax)
+
+
+    ax.set_xticks(np.arange(len(filtered_df.columns)))
+    ax.set_xticklabels(filtered_df.columns, rotation=label_rotation, ha='right', fontsize=fontsize)
+    
+    ax.set_yticks(np.arange(len(filtered_df.columns)))
+
+    ax.set_yticklabels(filtered_df.columns, fontsize=fontsize)
+
+    for i in range(len(filtered_df.columns)):
+        for j in range(len(filtered_df.columns)):
+            if mask[i, j]:
+                ax.text(j, i, '', va='center', ha='center')
+            else:
+                text = ax.text(j, i, round(masked_corr_matrix[i, j], 2), va='center', ha='center', fontsize=8)
+
+    ax.xaxis.tick_bottom()
+    ax.xaxis.set_ticks_position('none')
+    ax.yaxis.set_ticks_position('none')
+    ax.patch.set_visible(True)
+
+    
+    return ax
+
+
+def dendrogram(
+    df, method='average', filter=None, n=0, p=0, orientation=None, figsize=None, fontsize=16,
+    label_rotation=45, ax=None
+):
+    """
+    Fits a `scipy` hierarchical clustering algorithm to the given DataFrame's variables and visualizes the results as
+    a `scipy` dendrogram.
+
+    The default vertical display will fit up to 50 columns. If more than 50 columns are specified and orientation is
+    left unspecified the dendrogram will automatically swap to a horizontal display to fit the additional variables.
+
+    :param df: The DataFrame whose completeness is being dendrogrammed.
+    :param method: The distance measure being used for clustering. This is a parameter that is passed to
+        `scipy.hierarchy`.
+    :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default).
+    :param n: The cap on the number of columns to include in the filtered DataFrame.
+    :param p: The cap on the percentage fill of the columns in the filtered DataFrame.
+    :param figsize: The size of the figure to display. This is a `matplotlib` parameter which defaults to `(25, 10)`.
+    :param fontsize: The figure's font size.
+    :param orientation: The way the dendrogram is oriented. Defaults to top-down if there are less than or equal to 50
+        columns and left-right if there are more.
+    :param label_rotation: What angle to rotate the text labels to. Defaults to 45 degrees.
+    :return: The plot axis.
+    """
+    if not figsize:
+        if len(df.columns) <= 50 or orientation == 'top' or orientation == 'bottom':
+            figsize = (25, 10)
+        else:
+            figsize = (25, (25 + len(df.columns) - 50) * 0.5)
+
     if ax is None:
         plt.figure(figsize=figsize)
         ax0 = plt.gca()
     else:
         ax0 = ax
 
-    # Remove completely filled or completely empty variables.
-    # df = df.iloc[:, [i for i, n in enumerate(np.var(df.isnull(), axis='rows')) if n > 0]]
-    null_df = df_nw.select(nw.all().is_null().cast(nw.UInt8()))
-    variance = null_df.select([nw.col(col).std() for col in null_df.columns]) #std is ) then variance is 0 as well
-    filtered_columns = [col for col, var in zip(df_nw.columns, variance.row(0)) if var > 0] #pyarrpw tu ne ogarnia tego col,var
-    filtered_df = null_df.select(filtered_columns)
-    # Create and mask the correlation matrix. Construct the base heatmap.
-    #corr_mat = df.isnull().corr()
-    corr_matrix = filtered_df.drop(filtered_df.columns)
-    breakpoint()
-    for col1 in filtered_df.columns:
-        row = []
-        for col2 in filtered_df.columns:
-            corr = pearson_corr(filtered_df[col1], filtered_df[col2])
-            row.append(corr)
-        ser = nw.new_series(col1, row, native_namespace=nw.get_native_namespace(df_nw))
-        corr_matrix = corr_matrix.with_columns(ser) #obczaj w pdb dlaczego jest mismatch dlugosci
-        
-    mask = np.zeros_like(corr_matrix)
-    mask[np.triu_indices_from(mask)] = True
+    df = nullity_filter(df, filter=filter, n=n, p=p)
+    df_nw = nw.from_native(df)
+    # Link the hierarchical output matrix, figure out orientation, construct base dendrogram.
+    x = np.transpose(df_nw.select(nw.all().is_null().cast(nw.Int8)).to_numpy())
+    z = hierarchy.linkage(x, method)
 
-    if labels:
-        sns.heatmap(nw.to_native(corr_matrix), mask=mask, cmap=cmap, ax=ax0, cbar=cbar,
-                    annot=True, annot_kws={'size': fontsize - 2},
-                    vmin=vmin, vmax=vmax)
-    else:
-        sns.heatmap(nw.to_native(corr_matrix), mask=mask, cmap=cmap, ax=ax0, cbar=cbar,
-                    vmin=vmin, vmax=vmax)
+    if not orientation:
+        if len(df_nw.columns) > 50:
+            orientation = 'left'
+        else:
+            orientation = 'bottom'
 
-    # Apply visual corrections and modifications.
-    ax0.xaxis.tick_bottom()
-    ax0.set_xticklabels(
-        ax0.xaxis.get_majorticklabels(), rotation=label_rotation, ha='right', fontsize=fontsize
+    hierarchy.dendrogram(
+        z,
+        orientation=orientation,
+        labels=list(df_nw.columns), #maybe jus df.columns will work? 
+        distance_sort='descending',
+        link_color_func=lambda c: 'black',
+        leaf_font_size=fontsize,
+        ax=ax0
     )
-    ax0.set_yticklabels(ax0.yaxis.get_majorticklabels(), rotation=0, fontsize=fontsize)
+
+    # Remove extraneous default visual elements.
+    ax0.set_aspect('auto')
+    ax0.grid(visible=False)
+    if orientation == 'bottom':
+        ax0.xaxis.tick_top()
     ax0.xaxis.set_ticks_position('none')
     ax0.yaxis.set_ticks_position('none')
+    ax0.spines['top'].set_visible(False)
+    ax0.spines['right'].set_visible(False)
+    ax0.spines['bottom'].set_visible(False)
+    ax0.spines['left'].set_visible(False)
     ax0.patch.set_visible(False)
 
-    for text in ax0.texts:
-        t = float(text.get_text())
-        if 0.95 <= t < 1:
-            text.set_text('<1')
-        elif -1 < t <= -0.95:
-            text.set_text('>-1')
-        elif t == 1:
-            text.set_text('1')
-        elif t == -1:
-            text.set_text('-1')
-        elif -0.05 < t < 0.05:
-            text.set_text('')
-        else:
-            text.set_text(round(t, 1))
+    # Set up the categorical axis labels and draw.
+    if orientation == 'bottom':
+        ax0.set_xticklabels(ax0.xaxis.get_majorticklabels(), rotation=label_rotation, ha='left')
+    elif orientation == 'top':
+        ax0.set_xticklabels(ax0.xaxis.get_majorticklabels(), rotation=label_rotation, ha='right')
+    if orientation == 'bottom' or orientation == 'top':
+        ax0.tick_params(axis='y', labelsize=int(fontsize / 16 * 20))
+    else:
+        ax0.tick_params(axis='x', labelsize=int(fontsize / 16 * 20))
 
     return ax0
-
-
-# def dendrogram(
-#     df, method='average', filter=None, n=0, p=0, orientation=None, figsize=None, fontsize=16,
-#     label_rotation=45, ax=None
-# ):
-#     """
-#     Fits a `scipy` hierarchical clustering algorithm to the given DataFrame's variables and visualizes the results as
-#     a `scipy` dendrogram.
-
-#     The default vertical display will fit up to 50 columns. If more than 50 columns are specified and orientation is
-#     left unspecified the dendrogram will automatically swap to a horizontal display to fit the additional variables.
-
-#     :param df: The DataFrame whose completeness is being dendrogrammed.
-#     :param method: The distance measure being used for clustering. This is a parameter that is passed to
-#         `scipy.hierarchy`.
-#     :param filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default).
-#     :param n: The cap on the number of columns to include in the filtered DataFrame.
-#     :param p: The cap on the percentage fill of the columns in the filtered DataFrame.
-#     :param figsize: The size of the figure to display. This is a `matplotlib` parameter which defaults to `(25, 10)`.
-#     :param fontsize: The figure's font size.
-#     :param orientation: The way the dendrogram is oriented. Defaults to top-down if there are less than or equal to 50
-#         columns and left-right if there are more.
-#     :param label_rotation: What angle to rotate the text labels to. Defaults to 45 degrees.
-#     :return: The plot axis.
-#     """
-#     if not figsize:
-#         if len(df.columns) <= 50 or orientation == 'top' or orientation == 'bottom':
-#             figsize = (25, 10)
-#         else:
-#             figsize = (25, (25 + len(df.columns) - 50) * 0.5)
-
-#     if ax is None:
-#         plt.figure(figsize=figsize)
-#         ax0 = plt.gca()
-#     else:
-#         ax0 = ax
-
-#     df = nullity_filter(df, filter=filter, n=n, p=p)
-
-#     # Link the hierarchical output matrix, figure out orientation, construct base dendrogram.
-#     x = np.transpose(df.isnull().astype(int).values)
-#     z = hierarchy.linkage(x, method)
-
-#     if not orientation:
-#         if len(df.columns) > 50:
-#             orientation = 'left'
-#         else:
-#             orientation = 'bottom'
-
-#     hierarchy.dendrogram(
-#         z,
-#         orientation=orientation,
-#         labels=df.columns.tolist(),
-#         distance_sort='descending',
-#         link_color_func=lambda c: 'black',
-#         leaf_font_size=fontsize,
-#         ax=ax0
-#     )
-
-#     # Remove extraneous default visual elements.
-#     ax0.set_aspect('auto')
-#     ax0.grid(visible=False)
-#     if orientation == 'bottom':
-#         ax0.xaxis.tick_top()
-#     ax0.xaxis.set_ticks_position('none')
-#     ax0.yaxis.set_ticks_position('none')
-#     ax0.spines['top'].set_visible(False)
-#     ax0.spines['right'].set_visible(False)
-#     ax0.spines['bottom'].set_visible(False)
-#     ax0.spines['left'].set_visible(False)
-#     ax0.patch.set_visible(False)
-
-#     # Set up the categorical axis labels and draw.
-#     if orientation == 'bottom':
-#         ax0.set_xticklabels(ax0.xaxis.get_majorticklabels(), rotation=label_rotation, ha='left')
-#     elif orientation == 'top':
-#         ax0.set_xticklabels(ax0.xaxis.get_majorticklabels(), rotation=label_rotation, ha='right')
-#     if orientation == 'bottom' or orientation == 'top':
-#         ax0.tick_params(axis='y', labelsize=int(fontsize / 16 * 20))
-#     else:
-#         ax0.tick_params(axis='x', labelsize=int(fontsize / 16 * 20))
-
-#     return ax0
